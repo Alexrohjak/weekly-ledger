@@ -87,3 +87,22 @@ Two other things the self-save does differently from a tool publish: it emits a 
 clean document (a tool publish nests it inside the viewer's own skeleton), and it
 re-serializes the DOM, so formatting and attribute order churn even where nothing
 changed.
+
+
+## Training data
+
+`tools/extract_sessions.py` turns the ledger's markup into a tidy dataset. The ledger
+keeps everything in HTML — the live week under `#days`, filed weeks deep-cloned into
+`<details class="wkfile">` under `#archlist` (inputs disabled but their values kept), and
+next week staged under `#nextdays`. The extractor reads `live-snapshot.html`, skips the
+staged week because it hasn't happened, and writes:
+
+- `data/runs.csv` — one row per run slot: date, week, planned, km, time, pace
+- `data/sets.csv` — one row per set: date, session, exercise, prescription, kg, hit
+- `data/sessions.json` — everything, nested
+
+    python3 tools/extract_sessions.py                 # from live-snapshot.html
+    python3 tools/extract_sessions.py --only-logged   # drop rows with no number
+
+Stdlib only (no bs4/lxml). Pace is computed as time/distance; the clock parser accepts
+`mm:ss`, `h:mm:ss` or bare minutes, matching the app.
