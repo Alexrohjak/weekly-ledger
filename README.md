@@ -135,3 +135,28 @@ Today is now marked by a lifted track (`--lift` rather than `--sunk`) with a 2px
 cap along its top edge, and the amber column header that was always there. The now-line
 is a hairline at 85% opacity with a 5px dot, ringed in `--sunk` so it stays legible
 where it crosses a coloured bar.
+
+
+## Moving blocks
+
+Each block has a ⠿ handle on the left. Drag it to move the block within a day or to
+another day; the week diagram follows immediately, because `drawShape()` reads `.t` and
+`data-end` and that is exactly what a drop rewrites.
+
+**The drop position sets the time.** A block keeps its duration and starts when the
+block now above it ends. Dropped at the top of a day it ends where the next block
+begins; dropped into an empty day it keeps its own clock time. The day is then re-sorted
+by start time, so the list never falls out of chronological order.
+
+Pointer events, not HTML5 drag-and-drop — `dragstart` never fires from touch, and this
+has to work on a phone. `touch-action:none` on the handle stops a drag scrolling the
+page.
+
+Keyboard equivalent, so the handle is not mouse-only: focus it and use **Alt+↑/↓** to
+nudge the start by 15 minutes, **Alt+←/→** to move the block a day.
+
+Only `#days` and `#nextdays` accept drops. Filed weeks are frozen: `rollWeek()` strips
+their handles along with the log toggles.
+
+**+ block** now starts where the day currently ends rather than always at 12:00. The ×
+on each row still deletes.
