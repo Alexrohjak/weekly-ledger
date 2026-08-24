@@ -17,7 +17,28 @@ of the earlier publish.
 
 Both files have had the Claude Artifact frame runtime (the injected `<base>` tag and
 `<!-- frame-runtime -->` bootstrap script, ~11.5 KB) stripped, so they are plain
-standalone HTML. Nothing else was modified.
+standalone HTML. Beyond that, `index.html` carries the boot-order fix described below;
+`earlier-publish.html` is untouched.
+
+## The self-bricking save (fixed)
+
+`index.html` as pulled down was inert: dropdowns would not open or close, ticks did not
+fill the target rings, and nothing survived a reload. One error caused all three.
+
+`publishNow()` regenerates the page by collecting every `[data-app]` node into `<head>`.
+The app's own `<script>` carries `data-app`, so the first time the app saved itself it
+hoisted its script above the `#doc` element that the script reads on its third line.
+`document.getElementById('doc')` then returned `null` at parse time, the IIFE threw
+immediately, and no event listeners were ever attached — checkboxes still ticked
+natively, but nothing was listening. The save worked exactly once and broke every load
+after it. `earlier-publish.html`, which predates that save, still has the script after
+`#doc` and runs fine.
+
+Two changes:
+
+- Boot is deferred to `DOMContentLoaded`, so the script works wherever it sits.
+- `publishNow()` now emits `<script data-app>` at the end of `<body>` instead of in
+  `<head>`, so a save no longer relocates it.
 
 ## Running locally
 

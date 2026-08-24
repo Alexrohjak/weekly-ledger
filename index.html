@@ -284,6 +284,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 </style>
 <script data-app="">
 (function(){
+/* The script may sit in <head> (publishNow used to hoist it there), so the
+   DOM it reads need not exist yet. Boot once the document is parsed. */
+function weekLedger(){
   "use strict";
   var doc = document.getElementById('doc');
   var days = document.getElementById('days');
@@ -337,13 +340,19 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
   function publishNow(){
     if (!api) return;
     commit();
-    var head = '';
-    document.querySelectorAll('[data-app]').forEach(function(n){ head += n.outerHTML + '\n'; });
+    var head = '', tail = '';
+    /* The app script must stay after #doc. Hoisting it into <head> makes
+       getElementById('doc') null at parse time and the whole page inert —
+       a save that works once and bricks every later load. */
+    document.querySelectorAll('[data-app]').forEach(function(n){
+      if (n.tagName === 'SCRIPT') tail += n.outerHTML + '\n';
+      else head += n.outerHTML + '\n';
+    });
     var t = document.querySelector('title');
     var html = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
       + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
       + (t ? t.outerHTML + '\n' : '') + head + '</head>\n<body>\n'
-      + doc.outerHTML + '\n<div class="saving" id="saving" hidden></div>\n</body>\n</html>';
+      + doc.outerHTML + '\n<div class="saving" id="saving" hidden></div>\n' + tail + '</body>\n</html>';
     say('Saving…');
     api.publish(html).then(function(){
       say('Saved');
@@ -833,6 +842,9 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;paddin
 
   render();
   setInterval(render, 5 * 60 * 1000);   // keep the "now" line honest
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', weekLedger, {once:true});
+else weekLedger();
 })();
 </script>
 </head>
