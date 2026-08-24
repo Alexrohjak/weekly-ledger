@@ -106,3 +106,19 @@ staged week because it hasn't happened, and writes:
 
 Stdlib only (no bs4/lxml). Pace is computed as time/distance; the clock parser accepts
 `mm:ss`, `h:mm:ss` or bare minutes, matching the app.
+
+
+## Finish times
+
+Every block already carried a `data-end`; it was simply never displayed, so a lecture
+read `08:15` with no indication of when it ended. Each block now shows `start – end`.
+
+- The finish time is a `.tend` span after `.t`, editable like the start time. Editing it
+  writes back to `data-end`, which is what `blockSpan()` reads for the week diagram.
+- The en dash comes from `.tend::before`, so the editable text stays just `HH:MM`.
+- `ensureEnds()` runs at the top of `render()` and adds a `.tend` to any block that
+  lacks one — blocks arriving from the timetable feed, or added with **+ block**. It
+  never rewrites an existing one: `render()` fires on every keystroke and would
+  otherwise move the caret mid-edit.
+- Archived weeks keep whatever they were filed with; `ensureEnds()` only touches `#days`
+  and `#nextdays`.
