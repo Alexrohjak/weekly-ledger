@@ -1,0 +1,999 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>The Week Ledger</title>
+<link data-app rel="preconnect" href="https://fonts.googleapis.com">
+<link data-app rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link data-app rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style data-app>
+:root{
+  --paper:#ECEEF1; --card:#F8F9FB; --sunk:#DDE1E7; --lift:#FFFFFF;
+  --ink:#12161C; --ink2:#4A5561; --ink3:#78838F;
+  --rule:#C6CCD4; --rule2:#DCE1E7;
+  --accent:#2563C9; --amber:#B46E08; --amber-ink:#8A5206; --clay:#BC3B2E;
+  --c-work:#2563C9; --c-study:#7C4DBE; --c-fit:#0B755D; --c-music:#9F6107; --c-life:#64707E;
+  --shadow:0 1px 2px rgba(18,22,28,.07), 0 10px 30px -18px rgba(18,22,28,.45);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1116; --card:#161B22; --sunk:#1C222B; --lift:#1F2630;
+    --ink:#E6EAF0; --ink2:#9AA6B4; --ink3:#6E7B89;
+    --rule:#2A323C; --rule2:#212932;
+    --accent:#6AA3FF; --amber:#F0A93C; --amber-ink:#F0A93C; --clay:#F0705C;
+    --c-work:#6AA3FF; --c-study:#B18AF0; --c-fit:#3FC79A; --c-music:#F0A93C; --c-life:#8B98A6;
+    --shadow:0 1px 2px rgba(0,0,0,.55), 0 10px 30px -18px rgba(0,0,0,.9);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1116; --card:#161B22; --sunk:#1C222B; --lift:#1F2630;
+  --ink:#E6EAF0; --ink2:#9AA6B4; --ink3:#6E7B89;
+  --rule:#2A323C; --rule2:#212932;
+  --accent:#6AA3FF; --amber:#F0A93C; --amber-ink:#F0A93C; --clay:#F0705C;
+  --c-work:#6AA3FF; --c-study:#B18AF0; --c-fit:#3FC79A; --c-music:#F0A93C; --c-life:#8B98A6;
+  --shadow:0 1px 2px rgba(0,0,0,.55), 0 10px 30px -18px rgba(0,0,0,.9);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Source Serif 4",Georgia,serif;font-size:16px;line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+.lbl,.dow,.mast h1,button,.wk,.tgoal-wrap,.colhd,.legend{
+  font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+}
+.t,.dnum,.dstat,.tcount,.wpct,.hr,.tgoal{
+  font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;
+}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+#doc{max-width:1240px;margin:0 auto;padding:0 20px 80px}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:26px 0 12px}
+.mast h1{margin:0;font-size:33px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;line-height:1}
+.race{font-family:"Barlow Condensed",sans-serif;font-size:13px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--accent);font-weight:600;white-space:nowrap}
+.race b{color:var(--amber-ink);font-weight:600}
+.mast .owner{margin-left:auto;font-family:"Barlow Condensed",sans-serif;font-size:12.5px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+
+.whead{display:flex;align-items:flex-end;gap:18px 26px;flex-wrap:wrap;
+  padding:0 0 18px;border-bottom:2px solid var(--ink)}
+.wk{display:block;font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.wrange{display:block;font-size:29px;line-height:1.1;font-weight:600;letter-spacing:-.015em}
+.wactions{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-left:auto}
+.carry{display:flex;align-items:center;gap:8px;font-family:"Barlow Condensed",sans-serif;
+  font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);cursor:pointer}
+.carry input{width:18px;height:18px;accent-color:var(--accent)}
+.btn{border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:10px 17px 9px;
+  font-size:15px;letter-spacing:.09em;text-transform:uppercase;font-weight:600;border-radius:3px;
+  transition:opacity .15s}
+.btn:hover{opacity:.84}
+
+/* ---------- week shape diagram ---------- */
+.hero{margin:22px 0 6px;background:var(--card);border:1px solid var(--rule2);
+  border-radius:6px;padding:18px 18px 14px;box-shadow:var(--shadow)}
+.herohd{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.lbl{font-size:12.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);font-weight:600;margin:0}
+.wpct{font-size:13px;color:var(--ink2);margin-left:auto}
+.wpct b{color:var(--ink);font-weight:700}
+.shape{display:grid;grid-template-columns:32px minmax(0,1fr);gap:0 9px;
+  overflow-x:auto;overflow-y:hidden}
+.hrs{display:flex;flex-direction:column;gap:6px}
+.hrspacer{height:16px;flex:none}
+.hrtrack{position:relative;height:var(--trackh,500px)}
+.hr{font-size:11px;color:var(--ink3);position:absolute;right:0;
+  transform:translateY(-50%);letter-spacing:-.02em}
+.cols{display:grid;grid-template-columns:repeat(7,minmax(88px,1fr));gap:6px;min-width:640px}
+.col{display:flex;flex-direction:column;gap:6px}
+.colhd{font-size:12px;line-height:16px;height:16px;flex:none;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--ink3);text-align:center;font-weight:600;white-space:nowrap}
+.col.today .colhd{color:var(--amber-ink)}
+.track{position:relative;background:var(--sunk);border-radius:5px;height:var(--trackh,500px);overflow:hidden}
+.col.today .track{box-shadow:inset 0 0 0 1.5px var(--amber)}
+.gl{position:absolute;left:0;right:0;height:1px;background:var(--rule2)}
+.bar{position:absolute;left:2px;right:2px;border-radius:4px;background:var(--c);
+  overflow:hidden;padding:0 6px;min-height:17px;cursor:default;
+  display:flex;align-items:flex-start}
+.bar.done{opacity:.34}
+.bar span{font-family:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:13px;line-height:16px;font-weight:600;color:#FFFFFF;display:block;
+  letter-spacing:0;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar.tall{padding:1px 6px}
+.bar.tall span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;line-clamp:2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .bar span{color:#0E1116}}
+:root[data-theme="dark"] .bar span{color:#0E1116}
+.nowline{position:absolute;left:0;right:0;height:2px;background:var(--amber);z-index:3}
+.nowline::before{content:"";position:absolute;left:-2px;top:-3px;width:8px;height:8px;
+  border-radius:50%;background:var(--amber)}
+
+/* ---------- layout ---------- */
+.grid{display:grid;gap:32px;grid-template-columns:minmax(0,1fr) 300px;align-items:start;padding-top:26px}
+@media (max-width:1000px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- ledger ---------- */
+.days{list-style:none;margin:0;padding:0}
+.day{display:grid;grid-template-columns:58px minmax(0,1fr);gap:0 14px;
+  padding:13px 0 11px 10px;border-bottom:1px solid var(--rule2);
+  border-left:3px solid transparent;margin-left:-13px}
+.day:last-child{border-bottom:0}
+.day[data-local-today]{border-left-color:var(--amber);background:linear-gradient(90deg,var(--card),transparent 55%)}
+.dhead{display:flex;flex-direction:column;padding-top:6px}
+.dow{font-size:12.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--ink3);font-weight:600}
+.day[data-local-today] .dow{color:var(--amber-ink)}
+.dnum{font-size:25px;line-height:1.05;font-weight:500}
+.dstat{font-size:11px;color:var(--ink3);margin-top:4px}
+.blks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.blk{display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  padding:3px 8px 3px 0;border-radius:5px;
+  background:color-mix(in oklab, var(--c) 7%, transparent)}
+.blk:hover{background:color-mix(in oklab, var(--c) 14%, transparent)}
+.blk[data-cat="work"]{--c:var(--c-work)} .blk[data-cat="study"]{--c:var(--c-study)}
+.blk[data-cat="fitness"]{--c:var(--c-fit)} .blk[data-cat="music"]{--c:var(--c-music)}
+.blk{--c:var(--c-life)}
+.tk{display:inline-flex;padding:11px;margin:-11px -5px -11px -3px;cursor:pointer}
+.tick{appearance:none;-webkit-appearance:none;margin:0;width:22px;height:22px;flex:none;
+  border:2px solid var(--ink3);border-radius:6px;background:var(--lift);cursor:pointer;
+  position:relative;transition:.13s}
+.tk:hover .tick{border-color:var(--accent)}
+.tick:checked{background:var(--accent);border-color:var(--accent)}
+.tick:checked::after{content:"";position:absolute;left:6.5px;top:2px;width:5px;height:11px;
+  border:solid var(--paper);border-width:0 2.5px 2.5px 0;transform:rotate(43deg)}
+.cat{width:5px;height:24px;border-radius:99px;flex:none;background:var(--c)}
+.t{font-size:13.5px;color:var(--ink2);min-width:42px}
+.ttl{font-size:16.5px;min-width:40px;padding:2px 0;flex:1 1 auto}
+.blk:has(.tick:checked){background:transparent}
+.blk:has(.tick:checked) .ttl{color:var(--ink3);text-decoration:line-through;
+  text-decoration-color:var(--rule);text-decoration-thickness:1px}
+.blk:has(.tick:checked) .t{color:var(--ink3)}
+.rec,.del{font-size:16px;line-height:1;color:var(--ink3);opacity:0;padding:7px 6px;border-radius:4px;transition:opacity .12s}
+.blk[data-recur="1"] .rec{opacity:.7;color:var(--accent)}
+.blk:hover .rec,.blk:hover .del,.blk:focus-within .rec,.blk:focus-within .del{opacity:.7}
+.rec:hover,.del:hover{opacity:1;background:var(--sunk)}
+.del:hover{color:var(--clay)}
+.drow{margin-top:7px}
+.add{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);
+  padding:5px 9px;border:1px dashed var(--rule);border-radius:4px}
+.add:hover{color:var(--accent);border-color:var(--accent);border-style:solid}
+
+/* ---------- session log ---------- */
+.exp{font-size:13px;line-height:1;color:var(--ink3);padding:7px;border-radius:4px;opacity:.75}
+.exp:hover{opacity:1;background:var(--sunk)}
+.blk[data-open] .exp{transform:rotate(180deg);color:var(--accent);opacity:1}
+.log{flex:0 0 100%;margin:7px 0 5px;padding:11px 13px 12px;background:var(--lift);
+  border:1px solid var(--rule2);border-radius:6px}
+.lg{display:grid;grid-template-columns:minmax(0,1fr) auto 72px 28px;gap:5px 14px;
+  align-items:center;padding:6px 0;border-bottom:1px solid var(--rule2)}
+.lg:last-of-type{border-bottom:0}
+.lrun{grid-template-columns:auto minmax(0,1fr) 76px 82px}
+.lkm,.ltime{width:100%;padding:6px 8px;font-family:"JetBrains Mono",monospace;font-size:14px;
+  text-align:right;background:var(--card);color:var(--ink);border:1px solid var(--rule);
+  border-radius:4px;font-variant-numeric:tabular-nums}
+.lkm::placeholder,.ltime::placeholder{color:var(--ink3);opacity:.6}
+.lkm:focus,.ltime:focus{border-color:var(--accent);outline:none}
+.lex{font-size:15px}
+.lrx{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--ink3);white-space:nowrap}
+.lkg{width:72px;padding:6px 8px;font-family:"JetBrains Mono",monospace;font-size:14px;
+  text-align:right;background:var(--card);color:var(--ink);border:1px solid var(--rule);
+  border-radius:4px;font-variant-numeric:tabular-nums}
+.lkg::placeholder{color:var(--ink3);opacity:.6}
+.lkg:focus{border-color:var(--accent);outline:none}
+.lhit{display:inline-flex;padding:4px;cursor:pointer}
+.lhitbox{appearance:none;-webkit-appearance:none;margin:0;width:20px;height:20px;flex:none;
+  border:2px solid var(--ink3);border-radius:5px;background:var(--card);cursor:pointer;position:relative}
+.lhitbox:checked{background:var(--accent);border-color:var(--accent)}
+.lhitbox:checked::after{content:"";position:absolute;left:5.5px;top:1.5px;width:5px;height:10px;
+  border:solid var(--paper);border-width:0 2.5px 2.5px 0;transform:rotate(43deg)}
+.lnext{font-size:13.5px;color:var(--accent);margin-top:10px;line-height:1.5}
+.lnext b{font-weight:600}
+.lnext:empty{display:none}
+@media (max-width:600px){
+  .lg{grid-template-columns:minmax(0,1fr) 72px 28px}
+  .lrun{grid-template-columns:auto 76px 82px}
+  .lrx{grid-column:1/-1;order:3}
+}
+
+/* ---------- rail ---------- */
+.rail{display:flex;flex-direction:column;gap:22px;position:sticky;top:14px}
+@media (max-width:1000px){.rail{position:static}}
+.panel{background:var(--card);border:1px solid var(--rule2);border-radius:6px;
+  padding:17px 17px 16px;box-shadow:var(--shadow)}
+.tgts{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:13px}
+.tgt{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:0 13px;align-items:center}
+.ring{width:48px;height:48px;display:block}
+.ring .rbg{fill:none;stroke:var(--rule);stroke-width:3.5}
+.ring .rfg{fill:none;stroke:var(--accent);stroke-width:3.5;stroke-linecap:round;
+  transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dasharray .4s ease}
+.ring .rfg.hit{stroke:var(--amber)}
+.ring text{font-family:"JetBrains Mono",monospace;font-size:12px;fill:var(--ink);
+  text-anchor:middle;font-weight:500}
+.tname{font-size:16px;padding:2px 0}
+.tgoal-wrap{font-size:13.5px;color:var(--ink3);letter-spacing:.04em;white-space:nowrap;display:flex;align-items:center;gap:3px}
+.tgoal{color:var(--ink2);min-width:14px;display:inline-block;text-align:right;padding:2px}
+.tdel{font-size:15px;color:var(--ink3);opacity:0;padding:6px 4px}
+.tgt:hover .tdel,.tgt:focus-within .tdel{opacity:.7}
+.tdel:hover{opacity:1;color:var(--clay)}
+.addtgt{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);
+  margin-top:14px;padding:5px 9px;border:1px dashed var(--rule);border-radius:4px}
+.addtgt:hover{color:var(--accent);border-color:var(--accent);border-style:solid}
+
+.balbar{display:flex;height:26px;border-radius:5px;overflow:hidden;margin:12px 0 12px;background:var(--sunk)}
+.balbar i{display:block;transition:width .4s ease}
+.legend{display:flex;flex-direction:column;gap:7px;font-size:13.5px;letter-spacing:.04em}
+.legend div{display:flex;align-items:center;gap:9px;color:var(--ink2)}
+.legend b{width:11px;height:11px;border-radius:3px;flex:none}
+.legend u{margin-left:auto;text-decoration:none;font-family:"JetBrains Mono",monospace;
+  font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.hint{font-size:13px;color:var(--ink3);line-height:1.5;margin:12px 0 0}
+
+/* ---------- staged + archive ---------- */
+.stage{margin-top:40px;border-top:1px dashed var(--rule);padding-top:4px}
+.stage summary,.wkfile summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;
+  gap:12px;flex-wrap:wrap;padding:13px 4px}
+.stage summary::-webkit-details-marker,.wkfile summary::-webkit-details-marker{display:none}
+.stage summary::before,.wkfile summary::before{content:"▸";color:var(--ink3);font-size:12px;transition:transform .15s}
+.stage[open] summary::before,.wkfile[open] summary::before{transform:rotate(90deg)}
+.stagemeta{font-size:13px;color:var(--ink3);font-style:italic}
+.stagemeta b{font-style:normal;font-weight:600;color:var(--ink2)}
+.stagebody{padding:2px 0 10px}
+.stagebody .day{opacity:.7}
+.stagebody .blk:hover{background:color-mix(in oklab, var(--c) 7%, transparent)}
+.stagebody .tick{pointer-events:none}
+.stagenote{font-size:13px;color:var(--ink3);font-style:italic;margin:0 0 12px;padding-left:4px}
+.arch{margin-top:40px;padding-top:18px;border-top:2px solid var(--ink)}
+.arch h2{font-family:"Barlow Condensed",sans-serif;font-size:20px;letter-spacing:.16em;
+  text-transform:uppercase;margin:0 0 12px;font-weight:700}
+.empty{color:var(--ink3);font-style:italic;font-size:15px;margin:0}
+.wkfile{border-bottom:1px solid var(--rule2)}
+.wkfile .fwk{font-family:"Barlow Condensed",sans-serif;font-size:16px;letter-spacing:.13em;
+  text-transform:uppercase;font-weight:600}
+.wkfile .frange{font-size:14px;color:var(--ink2)}
+.wkfile .fscore{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:12.5px;
+  color:var(--ink3);font-variant-numeric:tabular-nums}
+.wkfile .days{opacity:.85;padding:2px 0 14px}
+.wkfile .day{border-left-color:transparent!important;background:none!important}
+.wkfile .add,.wkfile .rec,.wkfile .del,.wkfile .tk{pointer-events:none}
+.wkfile .rec,.wkfile .del,.wkfile .add{display:none}
+.foot{margin-top:32px;font-size:13px;color:var(--ink3);line-height:1.65}
+.foot b{font-weight:600;color:var(--ink2)}
+.saving{position:fixed;right:16px;bottom:16px;background:var(--ink);color:var(--paper);
+  font-family:"Barlow Condensed",sans-serif;font-size:13px;letter-spacing:.1em;text-transform:uppercase;
+  padding:8px 14px;border-radius:4px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9}
+.saving.on{opacity:.93;pointer-events:auto}
+.saving button{text-decoration:underline;margin-left:8px}
+
+@media (max-width:600px){
+  #doc{padding:0 13px 60px}
+  .mast h1{font-size:26px}
+  .wrange{font-size:23px}
+  .wactions{margin-left:0}
+  .day{grid-template-columns:1fr;gap:7px;margin-left:-9px;padding-left:9px}
+  .dhead{flex-direction:row;align-items:baseline;gap:9px;padding-top:0}
+  .dstat{margin-top:0}
+  .ttl{font-size:16px}
+  .track{--trackh:400px}
+}
+</style>
+
+<div id="doc" data-schema="2" data-race="2027-04-24" data-plan-start="2026-08-24" data-phase="Foundation">
+
+  <header class="mast">
+    <h1>The Week Ledger</h1>
+    <artifact-local><span class="race" id="race"></span></artifact-local>
+    <span class="owner">Alexander</span>
+  </header>
+
+  <div class="whead">
+    <div>
+      <span class="wk" id="wknum">Week 35 &middot; 2026</span>
+      <span class="wrange" id="wrange">24 &ndash; 30 August</span>
+    </div>
+    <div class="wactions">
+      <label class="carry"><input type="checkbox" class="carryov" checked> carry unfinished</label>
+      <button class="btn" type="button" id="roll">File week &amp; start next</button>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="herohd">
+      <p class="lbl">The shape of your week</p>
+      <artifact-local><span class="wpct" id="wpct"></span></artifact-local>
+    </div>
+    <artifact-local><div class="shape" id="shape"></div></artifact-local>
+  </section>
+
+  <div class="grid">
+    <ol class="days" id="days">
+        <li class="day" data-date="2026-08-24">
+          <div class="dhead"><span class="dow">Mon</span><span class="dnum">24</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="study" data-recur="1" data-end="10:00" data-src="feed" data-key="08-15-inf122-forelesning-auditorium-1-r"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">08:15</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">INF122 Forelesning · Auditorium 1, Realfagbygget</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="study" data-recur="1" data-end="12:15"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">10:15</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Study</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="fitness" data-recur="0" data-end="13:40" data-src="plan" data-key="12-30-gym-a-legs-delts-triceps" title="Back squat 3×6-10 @1-2RIR · Romanian deadlift 3×8-12 @1-2RIR · Standing calf raise 4×8-12 @0RIR · Seated lateral raise 4×12-20 @0RIR · Overhead triceps ext. 3×10-15 @0RIR · Reverse crunch 3×10-15 @1RIR"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">12:30</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Gym A — legs, delts, triceps</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg" data-ex="Back squat"><span class="lex">Back squat</span><span class="lrx">3×6-10 @1-2RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Back squat"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Back squat"></label></div><div class="lg" data-ex="Romanian deadlift"><span class="lex">Romanian deadlift</span><span class="lrx">3×8-12 @1-2RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Romanian deadlift"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Romanian deadlift"></label></div><div class="lg" data-ex="Standing calf raise"><span class="lex">Standing calf raise</span><span class="lrx">4×8-12 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Standing calf raise"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Standing calf raise"></label></div><div class="lg" data-ex="Seated lateral raise"><span class="lex">Seated lateral raise</span><span class="lrx">4×12-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Seated lateral raise"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Seated lateral raise"></label></div><div class="lg" data-ex="Overhead triceps ext."><span class="lex">Overhead triceps ext.</span><span class="lrx">3×10-15 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Overhead triceps ext."><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Overhead triceps ext."></label></div><div class="lg" data-ex="Reverse crunch"><span class="lex">Reverse crunch</span><span class="lrx">3×10-15 @1RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Reverse crunch"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Reverse crunch"></label></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="work" data-recur="0" data-end="17:45" data-src="feed" data-key="16-45-trener-barne-og-ungdomsgrupper"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">16:45</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Trener — barne og ungdomsgrupper</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="work" data-recur="0" data-end="19:00" data-src="feed" data-key="18-00-trener-barne-og-ungdomsgrupper"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">18:00</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Trener — barne og ungdomsgrupper</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="music" data-recur="1" data-end="20:30"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">20:00</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Guitar</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+            <div class="drow"><button class="add" type="button">+ block</button></div>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-08-25">
+          <div class="dhead"><span class="dow">Tue</span><span class="dnum">25</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="fitness" data-recur="0" data-end="07:10" data-src="plan" data-key="06-45-run-easy-25-min-w1"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">06:45</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Run — easy 25 min · W1</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg lrun"><span class="lex">Actual</span><span class="lrx">planned 25 min easy</span><input class="lkm" type="text" inputmode="decimal" value="" placeholder="km" aria-label="Distance in kilometres"><input class="ltime" type="text" inputmode="numeric" value="" placeholder="mm:ss" aria-label="Time"></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="study" data-recur="1" data-end="12:15"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">10:15</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Study</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="study" data-recur="1" data-end="16:00" data-src="feed" data-key="14-15-inf122-forelesning-auditorium-1-r"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">14:15</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">INF122 Forelesning · Auditorium 1, Realfagbygget</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+            <div class="drow"><button class="add" type="button">+ block</button></div>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-08-26">
+          <div class="dhead"><span class="dow">Wed</span><span class="dnum">26</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="study" data-recur="1" data-end="12:00" data-src="feed" data-key="10-15-dat158-forelesning-aud14-f118"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">10:15</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">DAT158 Forelesning · Aud14 F118</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="study" data-recur="1" data-end="14:00" data-src="feed" data-key="12-15-dat158-laboratorie-velse-e442-data"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">12:15</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">DAT158 Laboratorieøvelse · E442 Datalab / E443 Datalab</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="fitness" data-recur="0" data-end="14:40" data-src="plan" data-key="14-15-gym-c-weak-points-only" title="Lateral raise 3×12-20 @0RIR · Overhead triceps ext. 3×10-15 @0RIR · Standing calf raise 3×10-15 @0RIR · Face pull 3×15-20 @0RIR · Straight-arm pulldown 2×12-15 @0RIR"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">14:15</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Gym C — weak points only</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg" data-ex="Lateral raise"><span class="lex">Lateral raise</span><span class="lrx">3×12-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Lateral raise"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Lateral raise"></label></div><div class="lg" data-ex="Overhead triceps ext."><span class="lex">Overhead triceps ext.</span><span class="lrx">3×10-15 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Overhead triceps ext."><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Overhead triceps ext."></label></div><div class="lg" data-ex="Standing calf raise"><span class="lex">Standing calf raise</span><span class="lrx">3×10-15 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Standing calf raise"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Standing calf raise"></label></div><div class="lg" data-ex="Face pull"><span class="lex">Face pull</span><span class="lrx">3×15-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Face pull"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Face pull"></label></div><div class="lg" data-ex="Straight-arm pulldown"><span class="lex">Straight-arm pulldown</span><span class="lrx">2×12-15 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Straight-arm pulldown"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Straight-arm pulldown"></label></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="work" data-recur="0" data-end="17:45" data-src="feed" data-key="16-45-trener-barne-og-ungdomsgrupper"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">16:45</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Trener — barne og ungdomsgrupper</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="work" data-recur="0" data-end="19:30" data-src="feed" data-key="18-00-trener-barne-og-ungdomsgrupper"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">18:00</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Trener — barne og ungdomsgrupper</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="music" data-recur="1" data-end="20:45"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">20:15</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Guitar</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+            <div class="drow"><button class="add" type="button">+ block</button></div>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-08-27">
+          <div class="dhead"><span class="dow">Thu</span><span class="dnum">27</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="fitness" data-recur="0" data-end="08:25" data-src="plan" data-key="08-00-run-easy-25-min-w1"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">08:00</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Run — easy 25 min · W1</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg lrun"><span class="lex">Actual</span><span class="lrx">planned 25 min easy</span><input class="lkm" type="text" inputmode="decimal" value="" placeholder="km" aria-label="Distance in kilometres"><input class="ltime" type="text" inputmode="numeric" value="" placeholder="mm:ss" aria-label="Time"></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="study" data-recur="1" data-end="14:00"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">12:15</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Study</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="fitness" data-recur="1" data-end="19:00"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">17:00</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Climbing</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+            <div class="drow"><button class="add" type="button">+ block</button></div>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-08-28">
+          <div class="dhead"><span class="dow">Fri</span><span class="dnum">28</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="study" data-recur="1" data-end="14:00" data-src="feed" data-key="12-15-dat158-forelesning-aud14-f118-ba"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">12:15</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">DAT158 Forelesning · Aud14 F118 / Balchen</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="fitness" data-recur="0" data-end="15:45" data-src="plan" data-key="14-30-gym-b-back-chest-delts-triceps" title="Lat pulldown, full stretch 4×6-12 @1-2RIR · Chest-supported row 3×8-12 @1-2RIR · Incline DB press 3×8-12 @1-2RIR · Cable lateral raise 4×12-20 @0RIR · Face pull 3×15-20 @0RIR · Close-grip press or dips 3×8-12 @0-1RIR · Seated calf raise 3×12-20 @0RIR · Couch stretch 2×45 s/side"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">14:30</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Gym B — back, chest, delts, triceps</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg" data-ex="Lat pulldown, full stretch"><span class="lex">Lat pulldown, full stretch</span><span class="lrx">4×6-12 @1-2RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Lat pulldown, full stretch"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Lat pulldown, full stretch"></label></div><div class="lg" data-ex="Chest-supported row"><span class="lex">Chest-supported row</span><span class="lrx">3×8-12 @1-2RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Chest-supported row"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Chest-supported row"></label></div><div class="lg" data-ex="Incline DB press"><span class="lex">Incline DB press</span><span class="lrx">3×8-12 @1-2RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Incline DB press"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Incline DB press"></label></div><div class="lg" data-ex="Cable lateral raise"><span class="lex">Cable lateral raise</span><span class="lrx">4×12-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Cable lateral raise"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Cable lateral raise"></label></div><div class="lg" data-ex="Face pull"><span class="lex">Face pull</span><span class="lrx">3×15-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Face pull"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Face pull"></label></div><div class="lg" data-ex="Close-grip press or dips"><span class="lex">Close-grip press or dips</span><span class="lrx">3×8-12 @0-1RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Close-grip press or dips"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Close-grip press or dips"></label></div><div class="lg" data-ex="Seated calf raise"><span class="lex">Seated calf raise</span><span class="lrx">3×12-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Seated calf raise"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Seated calf raise"></label></div><div class="lg" data-ex="Couch stretch"><span class="lex">Couch stretch</span><span class="lrx">2×45 s/side</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Couch stretch"><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Couch stretch"></label></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="music" data-recur="1" data-end="19:30"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">19:00</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Guitar</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+            <div class="drow"><button class="add" type="button">+ block</button></div>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-08-29">
+          <div class="dhead"><span class="dow">Sat</span><span class="dnum">29</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="fitness" data-recur="0" data-end="09:00" data-src="plan" data-key="08-30-run-long-30-min-w1"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">08:30</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Run — long 30 min · W1</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg lrun"><span class="lex">Actual</span><span class="lrx">planned 30 min long</span><input class="lkm" type="text" inputmode="decimal" value="" placeholder="km" aria-label="Distance in kilometres"><input class="ltime" type="text" inputmode="numeric" value="" placeholder="mm:ss" aria-label="Time"></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="work" data-recur="0" data-end="17:00" data-src="feed" data-key="11-00-resepsjonsvakt"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">11:00</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Resepsjonsvakt</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="fitness" data-recur="1" data-end="19:30"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">17:30</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Climbing</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+            <div class="drow"><button class="add" type="button">+ block</button></div>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-08-30">
+          <div class="dhead"><span class="dow">Sun</span><span class="dnum">30</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="work" data-recur="0" data-end="20:15" data-src="feed" data-key="14-45-resepsjonsvakt"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">14:45</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Resepsjonsvakt</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="music" data-recur="1" data-end="21:30"><label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="plaintext-only" aria-label="Time">21:00</span><span class="ttl" contenteditable="plaintext-only" aria-label="Activity">Guitar</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+            <div class="drow"><button class="add" type="button">+ block</button></div>
+          </div>
+        </li>
+    </ol>
+
+    <aside class="rail">
+      <section class="panel">
+        <p class="lbl">Weekly targets</p>
+        <ul class="tgts" id="tgts">
+          <li class="tgt"><artifact-local><span class="ringwrap"></span></artifact-local><span class="tname" contenteditable="plaintext-only">Run</span><span class="tgoal-wrap">of <span class="tgoal" contenteditable="plaintext-only">3</span><button class="tdel" type="button" aria-label="Delete target">&times;</button></span></li>
+          <li class="tgt"><artifact-local><span class="ringwrap"></span></artifact-local><span class="tname" contenteditable="plaintext-only">Gym</span><span class="tgoal-wrap">of <span class="tgoal" contenteditable="plaintext-only">3</span><button class="tdel" type="button" aria-label="Delete target">&times;</button></span></li>
+          <li class="tgt"><artifact-local><span class="ringwrap"></span></artifact-local><span class="tname" contenteditable="plaintext-only">Climbing</span><span class="tgoal-wrap">of <span class="tgoal" contenteditable="plaintext-only">2</span><button class="tdel" type="button" aria-label="Delete target">&times;</button></span></li>
+          <li class="tgt"><artifact-local><span class="ringwrap"></span></artifact-local><span class="tname" contenteditable="plaintext-only">Guitar</span><span class="tgoal-wrap">of <span class="tgoal" contenteditable="plaintext-only">4</span><button class="tdel" type="button" aria-label="Delete target">&times;</button></span></li>
+          <li class="tgt"><artifact-local><span class="ringwrap"></span></artifact-local><span class="tname" contenteditable="plaintext-only">Study</span><span class="tgoal-wrap">of <span class="tgoal" contenteditable="plaintext-only">3</span><button class="tdel" type="button" aria-label="Delete target">&times;</button></span></li>
+        </ul>
+        <button class="addtgt" type="button" id="addtgt">+ target</button>
+        <p class="hint">A target counts every ticked block whose name contains the target&rsquo;s name.</p>
+      </section>
+
+      <section class="panel">
+        <p class="lbl">Where the week goes</p>
+        <artifact-local>
+          <div class="balbar" id="balbar"></div>
+          <div class="legend" id="legend"></div>
+        </artifact-local>
+      </section>
+    </aside>
+  </div>
+
+  <details class="stage" id="stage">
+    <summary><span class="lbl">Next week</span><span class="stagemeta" id="stagemeta"><b>Week 36</b> · 31 Aug – 6 Sep · 25 blocks</span></summary>
+    <div class="stagebody">
+      <p class="stagenote">Kept up to date from TimeEdit, Canvas and When I Work. Read-only &mdash; it becomes editable the moment you press &ldquo;File week &amp; start next&rdquo;.</p>
+      <ol class="days" id="nextdays">
+        <li class="day" data-date="2026-08-31">
+          <div class="dhead"><span class="dow">Mon</span><span class="dnum">31</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="study" data-recur="1" data-end="10:00" data-src="feed" data-key="08-15-inf122-forelesning-auditorium-1-r"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">08:15</span><span class="ttl" contenteditable="false" aria-label="Activity">INF122 Forelesning · Auditorium 1, Realfagbygget</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="study" data-recur="1" data-end="12:15"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">10:15</span><span class="ttl" contenteditable="false" aria-label="Activity">Study</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="fitness" data-recur="0" data-end="13:40" data-src="plan" data-key="12-30-gym-a-legs-delts-triceps" title="Back squat 3×6-10 @1-2RIR · Romanian deadlift 3×8-12 @1-2RIR · Standing calf raise 4×8-12 @0RIR · Seated lateral raise 4×12-20 @0RIR · Overhead triceps ext. 3×10-15 @0RIR · Reverse crunch 3×10-15 @1RIR"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">12:30</span><span class="ttl" contenteditable="false" aria-label="Activity">Gym A — legs, delts, triceps</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg" data-ex="Back squat"><span class="lex">Back squat</span><span class="lrx">3×6-10 @1-2RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Back squat" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Back squat" disabled></label></div><div class="lg" data-ex="Romanian deadlift"><span class="lex">Romanian deadlift</span><span class="lrx">3×8-12 @1-2RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Romanian deadlift" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Romanian deadlift" disabled></label></div><div class="lg" data-ex="Standing calf raise"><span class="lex">Standing calf raise</span><span class="lrx">4×8-12 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Standing calf raise" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Standing calf raise" disabled></label></div><div class="lg" data-ex="Seated lateral raise"><span class="lex">Seated lateral raise</span><span class="lrx">4×12-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Seated lateral raise" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Seated lateral raise" disabled></label></div><div class="lg" data-ex="Overhead triceps ext."><span class="lex">Overhead triceps ext.</span><span class="lrx">3×10-15 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Overhead triceps ext." disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Overhead triceps ext." disabled></label></div><div class="lg" data-ex="Reverse crunch"><span class="lex">Reverse crunch</span><span class="lrx">3×10-15 @1RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Reverse crunch" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Reverse crunch" disabled></label></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="work" data-recur="0" data-end="17:45" data-src="feed" data-key="16-45-trener-barne-og-ungdomsgrupper"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">16:45</span><span class="ttl" contenteditable="false" aria-label="Activity">Trener — barne og ungdomsgrupper</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="work" data-recur="0" data-end="19:00" data-src="feed" data-key="18-00-trener-barne-og-ungdomsgrupper"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">18:00</span><span class="ttl" contenteditable="false" aria-label="Activity">Trener — barne og ungdomsgrupper</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="music" data-recur="1" data-end="20:30"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">20:00</span><span class="ttl" contenteditable="false" aria-label="Activity">Guitar</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-09-01">
+          <div class="dhead"><span class="dow">Tue</span><span class="dnum">1</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="fitness" data-recur="0" data-end="07:15" data-src="plan" data-key="06-45-run-easy-30-min-w2"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">06:45</span><span class="ttl" contenteditable="false" aria-label="Activity">Run — easy 30 min · W2</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg lrun"><span class="lex">Actual</span><span class="lrx">planned 30 min easy</span><input class="lkm" type="text" inputmode="decimal" value="" placeholder="km" aria-label="Distance in kilometres" disabled><input class="ltime" type="text" inputmode="numeric" value="" placeholder="mm:ss" aria-label="Time" disabled></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="study" data-recur="1" data-end="12:15"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">10:15</span><span class="ttl" contenteditable="false" aria-label="Activity">Study</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="study" data-recur="1" data-end="16:00" data-src="feed" data-key="14-15-inf122-forelesning-auditorium-1-r"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">14:15</span><span class="ttl" contenteditable="false" aria-label="Activity">INF122 Forelesning · Auditorium 1, Realfagbygget</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-09-02">
+          <div class="dhead"><span class="dow">Wed</span><span class="dnum">2</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="study" data-recur="1" data-end="12:00" data-src="feed" data-key="10-15-dat158-forelesning-aud14-f118"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">10:15</span><span class="ttl" contenteditable="false" aria-label="Activity">DAT158 Forelesning · Aud14 F118</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="study" data-recur="1" data-end="14:00" data-src="feed" data-key="12-15-dat158-laboratorie-velse-e442-data"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">12:15</span><span class="ttl" contenteditable="false" aria-label="Activity">DAT158 Laboratorieøvelse · E442 Datalab / E443 Datalab</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="fitness" data-recur="0" data-end="14:40" data-src="plan" data-key="14-15-gym-c-weak-points-only" title="Lateral raise 3×12-20 @0RIR · Overhead triceps ext. 3×10-15 @0RIR · Standing calf raise 3×10-15 @0RIR · Face pull 3×15-20 @0RIR · Straight-arm pulldown 2×12-15 @0RIR"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">14:15</span><span class="ttl" contenteditable="false" aria-label="Activity">Gym C — weak points only</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg" data-ex="Lateral raise"><span class="lex">Lateral raise</span><span class="lrx">3×12-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Lateral raise" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Lateral raise" disabled></label></div><div class="lg" data-ex="Overhead triceps ext."><span class="lex">Overhead triceps ext.</span><span class="lrx">3×10-15 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Overhead triceps ext." disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Overhead triceps ext." disabled></label></div><div class="lg" data-ex="Standing calf raise"><span class="lex">Standing calf raise</span><span class="lrx">3×10-15 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Standing calf raise" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Standing calf raise" disabled></label></div><div class="lg" data-ex="Face pull"><span class="lex">Face pull</span><span class="lrx">3×15-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Face pull" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Face pull" disabled></label></div><div class="lg" data-ex="Straight-arm pulldown"><span class="lex">Straight-arm pulldown</span><span class="lrx">2×12-15 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Straight-arm pulldown" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Straight-arm pulldown" disabled></label></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="work" data-recur="0" data-end="17:45" data-src="feed" data-key="16-45-trener-barne-og-ungdomsgrupper"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">16:45</span><span class="ttl" contenteditable="false" aria-label="Activity">Trener — barne og ungdomsgrupper</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="work" data-recur="0" data-end="19:30" data-src="feed" data-key="18-00-trener-barne-og-ungdomsgrupper"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">18:00</span><span class="ttl" contenteditable="false" aria-label="Activity">Trener — barne og ungdomsgrupper</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="music" data-recur="1" data-end="20:45"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">20:15</span><span class="ttl" contenteditable="false" aria-label="Activity">Guitar</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-09-03">
+          <div class="dhead"><span class="dow">Thu</span><span class="dnum">3</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="fitness" data-recur="0" data-end="08:25" data-src="plan" data-key="08-00-run-easy-25-min-w2"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">08:00</span><span class="ttl" contenteditable="false" aria-label="Activity">Run — easy 25 min · W2</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg lrun"><span class="lex">Actual</span><span class="lrx">planned 25 min easy</span><input class="lkm" type="text" inputmode="decimal" value="" placeholder="km" aria-label="Distance in kilometres" disabled><input class="ltime" type="text" inputmode="numeric" value="" placeholder="mm:ss" aria-label="Time" disabled></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="study" data-recur="1" data-end="14:00"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">12:15</span><span class="ttl" contenteditable="false" aria-label="Activity">Study</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="fitness" data-recur="1" data-end="19:00"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">17:00</span><span class="ttl" contenteditable="false" aria-label="Activity">Climbing</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-09-04">
+          <div class="dhead"><span class="dow">Fri</span><span class="dnum">4</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="study" data-recur="1" data-end="14:00" data-src="feed" data-key="12-15-dat158-forelesning-aud-nordfjord"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">12:15</span><span class="ttl" contenteditable="false" aria-label="Activity">DAT158 Forelesning · Aud. Nordfjord / Aud14 F118</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="fitness" data-recur="0" data-end="15:45" data-src="plan" data-key="14-30-gym-b-back-chest-delts-triceps" title="Lat pulldown, full stretch 4×6-12 @1-2RIR · Chest-supported row 3×8-12 @1-2RIR · Incline DB press 3×8-12 @1-2RIR · Cable lateral raise 4×12-20 @0RIR · Face pull 3×15-20 @0RIR · Close-grip press or dips 3×8-12 @0-1RIR · Seated calf raise 3×12-20 @0RIR · Couch stretch 2×45 s/side"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">14:30</span><span class="ttl" contenteditable="false" aria-label="Activity">Gym B — back, chest, delts, triceps</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg" data-ex="Lat pulldown, full stretch"><span class="lex">Lat pulldown, full stretch</span><span class="lrx">4×6-12 @1-2RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Lat pulldown, full stretch" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Lat pulldown, full stretch" disabled></label></div><div class="lg" data-ex="Chest-supported row"><span class="lex">Chest-supported row</span><span class="lrx">3×8-12 @1-2RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Chest-supported row" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Chest-supported row" disabled></label></div><div class="lg" data-ex="Incline DB press"><span class="lex">Incline DB press</span><span class="lrx">3×8-12 @1-2RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Incline DB press" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Incline DB press" disabled></label></div><div class="lg" data-ex="Cable lateral raise"><span class="lex">Cable lateral raise</span><span class="lrx">4×12-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Cable lateral raise" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Cable lateral raise" disabled></label></div><div class="lg" data-ex="Face pull"><span class="lex">Face pull</span><span class="lrx">3×15-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Face pull" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Face pull" disabled></label></div><div class="lg" data-ex="Close-grip press or dips"><span class="lex">Close-grip press or dips</span><span class="lrx">3×8-12 @0-1RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Close-grip press or dips" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Close-grip press or dips" disabled></label></div><div class="lg" data-ex="Seated calf raise"><span class="lex">Seated calf raise</span><span class="lrx">3×12-20 @0RIR</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Seated calf raise" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Seated calf raise" disabled></label></div><div class="lg" data-ex="Couch stretch"><span class="lex">Couch stretch</span><span class="lrx">2×45 s/side</span><input class="lkg" type="text" inputmode="decimal" value="" placeholder="kg" aria-label="Weight for Couch stretch" disabled><label class="lhit"><input type="checkbox" class="lhitbox" aria-label="Hit all reps for Couch stretch" disabled></label></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="music" data-recur="1" data-end="19:30"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">19:00</span><span class="ttl" contenteditable="false" aria-label="Activity">Guitar</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-09-05">
+          <div class="dhead"><span class="dow">Sat</span><span class="dnum">5</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="fitness" data-recur="0" data-end="09:05" data-src="plan" data-key="08-30-run-long-35-min-w2"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">08:30</span><span class="ttl" contenteditable="false" aria-label="Activity">Run — long 35 min · W2</span><button class="exp" type="button" aria-label="Show log" aria-expanded="false">&#9662;</button><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button><div class="log" hidden><div class="lg lrun"><span class="lex">Actual</span><span class="lrx">planned 35 min long</span><input class="lkm" type="text" inputmode="decimal" value="" placeholder="km" aria-label="Distance in kilometres" disabled><input class="ltime" type="text" inputmode="numeric" value="" placeholder="mm:ss" aria-label="Time" disabled></div><artifact-local><div class="lnext"></div></artifact-local></div></li><li class="blk" data-cat="fitness" data-recur="1" data-end="19:30"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">17:30</span><span class="ttl" contenteditable="false" aria-label="Activity">Climbing</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+          </div>
+        </li>
+
+        <li class="day" data-date="2026-09-06">
+          <div class="dhead"><span class="dow">Sun</span><span class="dnum">6</span><artifact-local><span class="dstat"></span></artifact-local></div>
+          <div class="dbody">
+            <ul class="blks"><li class="blk" data-cat="work" data-recur="0" data-end="20:15" data-src="feed" data-key="14-45-resepsjonsvakt"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">14:45</span><span class="ttl" contenteditable="false" aria-label="Activity">Resepsjonsvakt</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li><li class="blk" data-cat="music" data-recur="1" data-end="21:30"><label class="tk"><input class="tick" type="checkbox" aria-label="Done" disabled></label><button class="cat" type="button" aria-label="Change category"></button><span class="t" contenteditable="false" aria-label="Time">21:00</span><span class="ttl" contenteditable="false" aria-label="Activity">Guitar</span><button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button><button class="del" type="button" aria-label="Delete">&times;</button></li></ul>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </details>
+
+  <section class="arch">
+    <h2>Archive</h2>
+    <div id="archlist"><p class="empty" id="archempty">No weeks filed yet. Your first record lands here when you press &ldquo;File week &amp; start next&rdquo;.</p></div>
+  </section>
+
+  <p class="foot">
+    <b>Tick</b> a block when it is done &mdash; the diagram fades it and the rings fill.
+    <b>&#9662;</b> on a gym session opens its log: enter the weight and tick whether you hit every rep,
+    and it works out next week&rsquo;s number. Runs, climbing, study and guitar just need the tick.
+    <b>Click any text</b> to edit it. <b>&#8635;</b> keeps a block every week; unmarked blocks are one-offs;
+    the colour bar cycles the category. Changes save on their own a few seconds after you stop.
+    <b>File week</b> archives this week and promotes the staged one.
+  </p>
+</div>
+
+<div class="saving" id="saving" hidden></div>
+
+<script data-app>
+(function(){
+  "use strict";
+  var doc = document.getElementById('doc');
+  var days = document.getElementById('days');
+  var CATS = ['work','study','fitness','music','life'];
+  var CATNAME = {work:'Work',study:'Study',fitness:'Training',music:'Music',life:'Life'};
+  var DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  var GRID_LO = 6 * 60, GRID_HI = 24 * 60;   // the diagram always spans 06:00–24:00
+
+  var isLive = !!doc.querySelector('[data-id]');
+  var api = null, dirty = false, KEY = 'week-ledger-v2';
+  var SCHEMA = doc.getAttribute('data-schema');
+  var chip = document.getElementById('saving');
+
+  function say(msg, withSave){
+    chip.hidden = false; chip.textContent = msg;
+    if (withSave){
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = 'Save now';
+      b.addEventListener('click', publishNow); chip.appendChild(b);
+    }
+    chip.classList.add('on');
+  }
+  function hush(){ chip.classList.remove('on'); }
+
+  function commit(){
+    doc.querySelectorAll('input[type=checkbox]').forEach(function(c){
+      if (c.checked) c.setAttribute('checked',''); else c.removeAttribute('checked');
+    });
+    doc.querySelectorAll('input[type=text]').forEach(function(i){
+      i.setAttribute('value', i.value);
+    });
+  }
+  function weekKey(){
+    var d = days && days.querySelector('.day');
+    return d ? d.getAttribute('data-date') || '' : '';
+  }
+  function stash(){
+    if (isLive) return;
+    try {
+      commit();
+      localStorage.setItem(KEY, JSON.stringify({v:SCHEMA, week:weekKey(), html:doc.innerHTML}));
+    } catch(e){}
+  }
+  function publishNow(){
+    if (!api) return;
+    commit();
+    var head = '';
+    document.querySelectorAll('[data-app]').forEach(function(n){ head += n.outerHTML + '\n'; });
+    var t = document.querySelector('title');
+    var html = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+      + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+      + (t ? t.outerHTML + '\n' : '') + head + '</head>\n<body>\n'
+      + doc.outerHTML + '\n<div class="saving" id="saving" hidden></div>\n</body>\n</html>';
+    say('Saving…');
+    api.publish(html).then(function(){
+      say('Saved');
+      setTimeout(hush, 2000);
+    }).catch(function(err){
+      var c = err && err.code;
+      if (c === 'conflict') return;
+      if (c === 'not_writer' || c === 'not_granted' || c === 'not_declared') say('Read-only here.');
+      else say('Could not save to the cloud — kept on this device.', true);
+    });
+  }
+  var saveTimer = null;
+  function scheduleSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function(){
+      var a = document.activeElement;
+      if (a && (a.isContentEditable || a.tagName === 'INPUT')){
+        scheduleSave();          // still typing — a publish would reload under you
+        return;
+      }
+      publishNow();
+    }, 5000);
+  }
+  function touched(){
+    if (isLive) return;
+    stash(); dirty = true;
+    if (api){ say('Unsaved'); scheduleSave(); }
+    else say('Offline \u2014 kept on this device.');
+  }
+
+  /* ---------- helpers ---------- */
+  function mins(s){
+    var m = /^\s*(\d{1,2})[:.](\d{2})/.exec(s || '');
+    return m ? (+m[1]) * 60 + (+m[2]) : null;
+  }
+  function blockSpan(b){
+    var s = mins(b.querySelector('.t').textContent);
+    if (s === null) return null;
+    var e = mins(b.getAttribute('data-end'));
+    if (e === null || e <= s) e = s + 45;
+    return { start: s, end: e };
+  }
+  function isoWeek(d){
+    var t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    var dn = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - dn);
+    var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return { week: Math.ceil((((t - y0) / 86400000) + 1) / 7), year: t.getUTCFullYear() };
+  }
+  function parseDate(s){ var p = String(s||'').split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function todayISO(){
+    var n = new Date();
+    return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+  }
+  function el(tag, cls, txt){
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt != null) n.textContent = txt;
+    return n;
+  }
+
+  /* ---------- derived UI — all of this lives inside <artifact-local> ---------- */
+  function render(){
+    var today = todayISO(), now = new Date();
+    var nowMin = now.getHours() * 60 + now.getMinutes();
+    var done = 0, total = 0;
+    var cols = [], byCat = {};
+
+    days.querySelectorAll(':scope > .day').forEach(function(day){
+      var isToday = day.dataset.date === today;
+      if (isToday) day.setAttribute('data-local-today','1'); else day.removeAttribute('data-local-today');
+
+      var blks = Array.prototype.slice.call(day.querySelectorAll('.blk'));
+      var d = 0, bars = [];
+      blks.forEach(function(b){
+        var ticked = b.querySelector('.tick').checked;
+        if (ticked) d++;
+        var sp = blockSpan(b);
+        if (sp){
+          bars.push({ s: sp.start, e: sp.end, cat: b.dataset.cat || 'life',
+                      title: b.querySelector('.ttl').textContent, done: ticked });
+          var c = b.dataset.cat || 'life';
+          byCat[c] = (byCat[c] || 0) + (sp.end - sp.start);
+        }
+      });
+      done += d; total += blks.length;
+      var st = day.querySelector('.dstat');
+      if (st) st.textContent = blks.length ? d + '/' + blks.length : '';
+      var dt2 = parseDate(day.dataset.date);
+      cols.push({ label: DOW[dt2.getDay()] + ' ' + dt2.getDate(), bars: bars, today: isToday });
+    });
+
+    var pct = total ? Math.round(done / total * 100) : 0;
+    var lab = document.getElementById('wpct');
+    var km = 0;
+    doc.querySelectorAll('#days .lrun .lkm').forEach(function(i){
+      var v = parseFloat(i.value); if (isFinite(v)) km += v;
+    });
+    if (lab) lab.innerHTML = '<b>' + done + '</b> of ' + total + ' done &middot; ' + pct + '%'
+      + (km > 0 ? ' &middot; <b>' + km.toFixed(1) + ' km</b> run' : '');
+    drawRace();
+
+    drawShape(cols, nowMin);
+    drawTargets();
+    drawLogs();
+    drawBalance(byCat);
+  }
+
+  function drawRace(){
+    var host = document.getElementById('race');
+    if (!host) return;
+    var race = doc.getAttribute('data-race');
+    if (!race){ host.textContent = ''; return; }
+    var days = Math.ceil((parseDate(race) - new Date()) / 86400000);
+    var bits = [];
+    var pstart = doc.getAttribute('data-plan-start');
+    var first = days_first();
+    if (pstart && first){
+      var w = Math.floor((parseDate(first) - parseDate(pstart)) / 604800000) + 1;
+      if (w > 0) bits.push((doc.getAttribute('data-phase') || 'Plan') + ' W' + w);
+    }
+    bits.push(days > 0 ? 'half marathon in <b>' + days + '</b> days' : 'race day');
+    host.innerHTML = bits.join(' \u00b7 ');
+  }
+  function days_first(){
+    var d = days && days.querySelector('.day');
+    return d ? d.getAttribute('data-date') : null;
+  }
+
+  function drawShape(cols, nowMin){
+    var wrap = document.getElementById('shape');
+    if (!wrap) return;
+    wrap.textContent = '';
+    if (!cols.length) return;
+    var lo = GRID_LO, hi = GRID_HI, span = hi - lo;
+    var pos = function(m){ return ((Math.min(hi, Math.max(lo, m)) - lo) / span) * 100; };
+
+    var hrs = el('div','hrs');
+    hrs.appendChild(el('div','hrspacer'));
+    var htrack = el('div','hrtrack');
+    for (var h = lo / 60; h <= hi / 60; h += 2){
+      var t = el('span','hr', String(h).padStart(2,'0'));
+      t.style.top = pos(h * 60) + '%';
+      htrack.appendChild(t);
+    }
+    hrs.appendChild(htrack);
+    wrap.appendChild(hrs);
+
+    var colwrap = el('div','cols');
+    cols.forEach(function(c){
+      var col = el('div','col' + (c.today ? ' today' : ''));
+      col.appendChild(el('span','colhd', c.label));
+      var track = el('div','track');
+      for (var h2 = lo / 60; h2 <= hi / 60; h2 += 2){
+        var g = el('div','gl'); g.style.top = pos(h2 * 60) + '%'; track.appendChild(g);
+      }
+      c.bars.forEach(function(b){
+        if (b.e <= lo || b.s >= hi) return;          // wholly outside the window
+        var top = pos(b.s), bot = pos(b.e);
+        var bar = el('div','bar' + (b.done ? ' done' : ''));
+        bar.style.top = top + '%';
+        bar.style.height = Math.max(1.2, bot - top) + '%';
+        bar.style.setProperty('--c','var(--c-' + (b.cat === 'fitness' ? 'fit' : b.cat) + ')');
+        bar.title = b.title;
+        if ((b.e - b.s) >= 80) bar.classList.add('tall');
+        bar.appendChild(el('span', null, b.title.split(' · ')[0]));
+        track.appendChild(bar);
+      });
+      if (c.today && nowMin >= lo && nowMin <= hi){
+        var nl = el('div','nowline'); nl.style.top = pos(nowMin) + '%'; track.appendChild(nl);
+      }
+      col.appendChild(track);
+      colwrap.appendChild(col);
+    });
+    wrap.appendChild(colwrap);
+  }
+
+  function drawTargets(){
+    var ticked = [];
+    days.querySelectorAll('.blk').forEach(function(b){
+      if (b.querySelector('.tick').checked) ticked.push(b.querySelector('.ttl').textContent.toLowerCase());
+    });
+    document.querySelectorAll('#tgts .tgt').forEach(function(tg){
+      var name = (tg.querySelector('.tname').textContent || '').trim().toLowerCase();
+      var goal = Math.max(0, Math.min(30, parseInt(tg.querySelector('.tgoal').textContent, 10) || 0));
+      var n = 0;
+      if (name) ticked.forEach(function(t){ if (t.indexOf(name) !== -1) n++; });
+      var host = tg.querySelector('.ringwrap');
+      if (!host) return;
+      var pct = goal ? Math.min(1, n / goal) : 0;
+      var C = 2 * Math.PI * 15.5;
+      host.innerHTML =
+        '<svg class="ring" viewBox="0 0 36 36" role="img" aria-label="' + n + ' of ' + goal + '">' +
+        '<circle class="rbg" cx="18" cy="18" r="15.5"></circle>' +
+        (pct > 0
+          ? '<circle class="rfg' + (goal && n >= goal ? ' hit' : '') + '" cx="18" cy="18" r="15.5" ' +
+            'stroke-dasharray="' + (pct * C).toFixed(2) + ' ' + C.toFixed(2) + '"></circle>'
+          : '') +
+        '<text x="18" y="22">' + n + '</text></svg>';
+    });
+  }
+
+  function parseClock(v){
+    v = String(v || '').trim();
+    if (!v) return 0;
+    var p = v.split(':');
+    if (p.length === 2) return (+p[0]) * 60 + (+p[1] || 0);   // mm:ss
+    if (p.length === 3) return (+p[0]) * 3600 + (+p[1]) * 60 + (+p[2] || 0);
+    var n = parseFloat(v);
+    return isFinite(n) ? n * 60 : 0;                          // bare minutes
+  }
+  function fmtClock(s){
+    s = Math.round(s);
+    var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+    return (h ? h + ':' + String(m).padStart(2,'0') : String(m)) + ':' + String(x).padStart(2,'0');
+  }
+
+  var COMPOUND = /squat|deadlift|pulldown|row|press|dip|pull-up/i;
+  function drawLogs(){
+    doc.querySelectorAll('.log').forEach(function(log){
+      var next = log.querySelector('.lnext');
+      if (!next) return;
+
+      var runrow = log.querySelector('.lrun');
+      if (runrow){
+        var km = parseFloat((runrow.querySelector('.lkm') || {}).value);
+        var secs = parseClock((runrow.querySelector('.ltime') || {}).value);
+        if (isFinite(km) && km > 0 && secs > 0){
+          var sp = secs / km;
+          next.innerHTML = '<b>' + fmtClock(Math.round(sp)) + '/km</b> \u00b7 '
+            + km.toFixed(2) + ' km in ' + fmtClock(secs);
+        } else {
+          next.innerHTML = '';
+        }
+        return;
+      }
+      var parts = [], held = [];
+      log.querySelectorAll('.lg').forEach(function(row){
+        var name = row.getAttribute('data-ex') || '';
+        var kg = parseFloat((row.querySelector('.lkg') || {}).value);
+        var hit = (row.querySelector('.lhitbox') || {}).checked;
+        if (!isFinite(kg) || kg <= 0) return;
+        if (hit){
+          var inc = COMPOUND.test(name) ? 2.5 : (kg < 15 ? 1 : 2.5);
+          parts.push(name + ' <b>' + (Math.round((kg + inc) * 10) / 10) + '</b>');
+        } else {
+          held.push(name);
+        }
+      });
+      var out = '';
+      if (parts.length) out += 'Next week: ' + parts.join(' \u00b7 ');
+      if (held.length) out += (out ? '<br>' : '') + 'Holds at the same weight: ' + held.join(', ');
+      next.innerHTML = out;
+    });
+  }
+
+  function drawBalance(byCat){
+    var bar = document.getElementById('balbar'), leg = document.getElementById('legend');
+    if (!bar || !leg) return;
+    var tot = 0;
+    CATS.forEach(function(c){ tot += byCat[c] || 0; });
+    bar.textContent = ''; leg.textContent = '';
+    if (!tot){ leg.appendChild(el('div', null, 'Nothing scheduled yet.')); return; }
+    CATS.forEach(function(c){
+      var m = byCat[c] || 0;
+      if (!m) return;
+      var v = 'var(--c-' + (c === 'fitness' ? 'fit' : c) + ')';
+      var i = el('i'); i.style.width = (m / tot * 100) + '%'; i.style.background = v;
+      i.title = CATNAME[c] + ' — ' + (m / 60).toFixed(1) + ' h';
+      bar.appendChild(i);
+      var row = el('div');
+      var sw = el('b'); sw.style.background = v;
+      row.appendChild(sw);
+      row.appendChild(document.createTextNode(CATNAME[c]));
+      row.appendChild(el('u', null, (m / 60).toFixed(1) + ' h'));
+      leg.appendChild(row);
+    });
+  }
+
+  /* ---------- interactions ---------- */
+  function blockHTML(){
+    return '<li class="blk" data-cat="life" data-recur="0" data-end="">'
+      + '<label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label>'
+      + '<button class="cat" type="button" aria-label="Change category"></button>'
+      + '<span class="t" contenteditable="plaintext-only" aria-label="Time">12:00</span>'
+      + '<span class="ttl" contenteditable="plaintext-only" aria-label="Activity">New block</span>'
+      + '<button class="rec" type="button" aria-label="Toggle recurring">&#8635;</button>'
+      + '<button class="del" type="button" aria-label="Delete">&times;</button></li>';
+  }
+
+  doc.addEventListener('click', function(e){
+    var t = e.target;
+    if (t.classList.contains('cat')){
+      var b = t.closest('.blk');
+      b.dataset.cat = CATS[(CATS.indexOf(b.dataset.cat) + 1) % CATS.length];
+      render(); touched(); return;
+    }
+    if (t.classList.contains('rec')){
+      var b2 = t.closest('.blk');
+      b2.dataset.recur = b2.dataset.recur === '1' ? '0' : '1';
+      touched(); return;
+    }
+    if (t.classList.contains('del')){ t.closest('.blk').remove(); render(); touched(); return; }
+    if (t.classList.contains('tdel')){ t.closest('.tgt').remove(); render(); touched(); return; }
+    if (t.id === 'addtgt'){
+      document.getElementById('tgts').insertAdjacentHTML('beforeend',
+        '<li class="tgt"><artifact-local><span class="ringwrap"></span></artifact-local>'
+        + '<span class="tname" contenteditable="plaintext-only">New target</span>'
+        + '<span class="tgoal-wrap">of <span class="tgoal" contenteditable="plaintext-only">1</span>'
+        + '<button class="tdel" type="button" aria-label="Delete target">&times;</button></span></li>');
+      document.getElementById('tgts').lastElementChild.querySelector('.tname').focus();
+      render(); touched(); return;
+    }
+    if (t.classList.contains('add')){
+      var list = t.closest('.dbody').querySelector('.blks');
+      list.insertAdjacentHTML('beforeend', blockHTML());
+      list.lastElementChild.querySelector('.ttl').focus();
+      render(); touched(); return;
+    }
+    if (t.classList.contains('exp')){
+      var blk = t.closest('.blk');
+      var log = blk.querySelector('.log');
+      if (!log) return;
+      var open = log.hasAttribute('hidden');
+      if (open){ log.removeAttribute('hidden'); blk.setAttribute('data-open',''); }
+      else { log.setAttribute('hidden',''); blk.removeAttribute('data-open'); }
+      t.setAttribute('aria-expanded', open ? 'true' : 'false');
+      touched(); return;
+    }
+    if (t.id === 'roll'){ rollWeek(); return; }
+  });
+
+  doc.addEventListener('change', function(e){
+    if (e.target.classList.contains('tick')){ render(); touched(); }
+    if (e.target.classList.contains('lhitbox')){ drawLogs(); touched(); }
+  });
+  doc.addEventListener('input', function(e){
+    if (e.target.classList.contains('lkg')){ drawLogs(); touched(); }
+    if (e.target.classList.contains('lkm') || e.target.classList.contains('ltime')){
+      drawLogs(); render(); touched();
+    }
+  });
+  doc.addEventListener('input', function(e){
+    if (e.target.isContentEditable){ render(); touched(); }
+  });
+  doc.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && e.target.isContentEditable){ e.preventDefault(); e.target.blur(); }
+  });
+  document.addEventListener('claude:edit', render);
+
+  /* ---------- roll forward ---------- */
+  function rollWeek(){
+    commit();
+    var carry = document.querySelector('.carryov').checked;
+    var wk = document.getElementById('wknum').textContent;
+    var rg = document.getElementById('wrange').textContent;
+    var dn = 0, tt = 0;
+    days.querySelectorAll('.blk').forEach(function(b){ tt++; if (b.querySelector('.tick').checked) dn++; });
+
+    var snap = document.createElement('details');
+    snap.className = 'wkfile';
+    var sum = document.createElement('summary');
+    sum.innerHTML = '<span class="fwk"></span><span class="frange"></span><span class="fscore"></span>';
+    sum.querySelector('.fwk').textContent = wk;
+    sum.querySelector('.frange').textContent = rg;
+    sum.querySelector('.fscore').textContent = dn + '/' + tt + ' · ' + (tt ? Math.round(dn / tt * 100) : 0) + '%';
+    snap.appendChild(sum);
+
+    var frozen = days.cloneNode(true);
+    frozen.removeAttribute('id');
+    frozen.querySelectorAll('.dhead artifact-local').forEach(function(al){
+      var st = al.querySelector('.dstat');
+      var s2 = el('span','dstat', st ? st.textContent : '');
+      al.parentNode.replaceChild(s2, al);
+    });
+    frozen.querySelectorAll('artifact-local, .drow').forEach(function(n){ n.remove(); });
+    frozen.querySelectorAll('[contenteditable]').forEach(function(n){ n.setAttribute('contenteditable','false'); });
+    frozen.querySelectorAll('input').forEach(function(n){ n.setAttribute('disabled',''); });
+    frozen.querySelectorAll('.day').forEach(function(d){ d.removeAttribute('data-local-today'); });
+    frozen.querySelectorAll('.log').forEach(function(l){ l.removeAttribute('hidden'); });
+    frozen.querySelectorAll('.exp').forEach(function(x){ x.remove(); });
+    snap.appendChild(frozen);
+
+    var list = document.getElementById('archlist');
+    var empty = document.getElementById('archempty');
+    if (empty) empty.remove();
+    list.insertBefore(snap, list.firstChild);
+
+    var staged = document.querySelectorAll('#nextdays > .day');
+    if (staged.length === 7){
+      var fresh = document.getElementById('nextdays').cloneNode(true);
+      fresh.querySelectorAll('[contenteditable]').forEach(function(n){ n.setAttribute('contenteditable','plaintext-only'); });
+      fresh.querySelectorAll('input').forEach(function(n){
+        n.removeAttribute('disabled'); n.checked = false; n.removeAttribute('checked');
+      });
+      if (carry){
+        days.querySelectorAll(':scope > .day').forEach(function(day, i){
+          var target = fresh.children[i];
+          if (!target) return;
+          day.querySelectorAll('.blk').forEach(function(b){
+            if (b.dataset.src === 'feed' || b.dataset.recur === '1') return;
+            if (b.querySelector('.tick').checked) return;
+            var c = b.cloneNode(true);
+            c.querySelector('.tick').checked = false;
+            c.querySelector('.tick').removeAttribute('checked');
+            target.querySelector('.blks').appendChild(c);
+          });
+        });
+      }
+      days.innerHTML = fresh.innerHTML;
+      document.getElementById('nextdays').innerHTML = '';
+      document.getElementById('stagemeta').textContent = 'promoted — waiting for the next refresh';
+      finishRoll();
+      return;
+    }
+
+    days.querySelectorAll(':scope > .day').forEach(function(day){
+      var d = parseDate(day.dataset.date);
+      d.setDate(d.getDate() + 7);
+      day.dataset.date = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      day.querySelector('.dnum').textContent = String(d.getDate());
+      day.querySelector('.dow').textContent = DOW[d.getDay()];
+      day.querySelectorAll('.blk').forEach(function(b){
+        var tick = b.querySelector('.tick');
+        var keep = b.dataset.recur === '1' || (carry && !tick.checked);
+        if (!keep){ b.remove(); return; }
+        tick.checked = false; tick.removeAttribute('checked');
+      });
+    });
+    finishRoll();
+  }
+
+  function finishRoll(){
+    var first = days.querySelector('.day');
+    var last = days.querySelector('.day:last-child');
+    var fd = parseDate(first.dataset.date), ld = parseDate(last.dataset.date);
+    var iw = isoWeek(fd);
+    document.getElementById('wknum').textContent = 'Week ' + iw.week + ' · ' + iw.year;
+    document.getElementById('wrange').textContent = fd.getMonth() === ld.getMonth()
+      ? fd.getDate() + ' – ' + ld.getDate() + ' ' + MON[ld.getMonth()]
+      : fd.getDate() + ' ' + MON[fd.getMonth()] + ' – ' + ld.getDate() + ' ' + MON[ld.getMonth()];
+    render(); touched();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---------- boot ---------- */
+  if (window.claude && typeof claude.use === 'function'){
+    claude.use('artifact').then(function(ns){
+      api = ns;
+      if (isLive) return;
+      if (!api) say('Offline — changes stay on this device.');
+      else if (dirty) say('Unsaved changes', true);
+    }).catch(function(){});
+  } else if (!isLive){
+    say('Offline — changes stay on this device.');
+  }
+
+  if (!isLive){
+    try {
+      var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+      /* A snapshot from a different week is stale: a newly published or rolled
+         week must never be overwritten by what this device remembers. */
+      if (saved && (saved.v !== SCHEMA || saved.week !== weekKey())){
+        localStorage.removeItem(KEY);
+        saved = null;
+      }
+      if (saved && saved.html){
+        doc.innerHTML = saved.html;
+        /* that replaced every node under #doc — the handle captured at boot now
+           points at a detached tree, so re-acquire it or every count reads zero */
+        days = document.getElementById('days');
+      }
+    } catch(e){}
+  }
+
+  render();
+  setInterval(render, 5 * 60 * 1000);   // keep the "now" line honest
+})();
+</script>
+
+</body></html>
