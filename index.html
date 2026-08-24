@@ -340,6 +340,14 @@ function weekLedger(){
   function publishNow(){
     if (!api) return;
     commit();
+    /* A device drops its remembered snapshot only when the published build
+       differs from it. Nothing stamped data-build at runtime, so a republish
+       landed on the other device and was immediately overwritten by what that
+       device remembered — which is why cross-device sync never worked. Stamp
+       every publish, and re-stash so this device agrees with what it sent. */
+    BUILD = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    doc.setAttribute('data-build', BUILD);
+    stash();
     var head = '', tail = '';
     /* The app script must stay after #doc. Hoisting it into <head> makes
        getElementById('doc') null at parse time and the whole page inert —
@@ -354,12 +362,24 @@ function weekLedger(){
       + (t ? t.outerHTML + '\n' : '') + head + '</head>\n<body>\n'
       + doc.outerHTML + '\n<div class="saving" id="saving" hidden></div>\n' + tail + '</body>\n</html>';
     say('Saving…');
-    api.publish(html).then(function(){
+    /* Prefer the files form: it leaves THIS view running, where the whole-page
+       form reloads the page under you a few seconds after every tick. Not every
+       view offers it, so fall back to the whole-page form. */
+    api.publish({'index.html': html}).catch(function(err){
+      var c = err && err.code;
+      if (c === 'capability_disabled' || c === 'capability_removed' || c === 'read_only_path'
+          || c === 'invalid_content' || c === 'transform_error') return api.publish(html);
+      throw err;
+    }).then(function(){
+      dirty = false;
       say('Saved');
       setTimeout(hush, 2000);
     }).catch(function(err){
       var c = err && err.code;
-      if (c === 'conflict') return;
+      /* The shell is already reloading every view to the winner, and our stash
+         carries a build the winner does not have, so it is discarded on the way
+         in. Say so rather than leaving the chip stuck on 'Saving…'. */
+      if (c === 'conflict'){ say('Someone else saved first — loading their version.'); return; }
       if (c === 'not_writer' || c === 'not_granted' || c === 'not_declared') say('Read-only here.');
       else say('Could not save to the cloud — kept on this device.', true);
     });
