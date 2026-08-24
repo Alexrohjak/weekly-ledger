@@ -122,3 +122,16 @@ read `08:15` with no indication of when it ended. Each block now shows `start â€
   otherwise move the caret mid-edit.
 - Archived weeks keep whatever they were filed with; `ensureEnds()` only touches `#days`
   and `#nextdays`.
+
+
+## Today and now, in the week diagram
+
+The diagram used to box today's whole column in a 1.5px amber ring
+(`.col.today .track{box-shadow:inset 0 0 0 1.5px var(--amber)}`), which shouted â€”
+particularly in dark mode, where `--amber` is `#F0A93C`. The now-line was a 2px bar with
+an 8px dot.
+
+Today is now marked by a lifted track (`--lift` rather than `--sunk`) with a 2px amber
+cap along its top edge, and the amber column header that was always there. The now-line
+is a hairline at 85% opacity with a 5px dot, ringed in `--sunk` so it stays legible
+where it crosses a coloured bar.
