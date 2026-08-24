@@ -368,9 +368,15 @@ function weekLedger(){
   function scheduleSave(){
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function(){
+      /* Only text entry should defer a publish, because a publish reloads the
+         page under you mid-word. A clicked checkbox keeps focus and is also an
+         <input>, so treating every focused INPUT as "typing" rescheduled for
+         ever and ticking — the main action here — never saved at all. */
       var a = document.activeElement;
-      if (a && (a.isContentEditable || a.tagName === 'INPUT')){
-        scheduleSave();          // still typing — a publish would reload under you
+      var typing = a && (a.isContentEditable ||
+        (a.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|reset)$/.test(a.type)));
+      if (typing){
+        scheduleSave();
         return;
       }
       publishNow();
