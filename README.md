@@ -154,11 +154,20 @@ runs and practices to a week, not after** — anything hand-added to those days 
 overwritten. Only `#days` is touched by default; `--section nextdays` fills the staged
 week.
 
-### Feeds are credentials
+### The three feeds
+
+Lectures come from two institutions, so the slots are named for the source rather than
+the tool:
+
+| Variable | Source |
+|---|---|
+| `LEDGER_FEED_HVL` | HVL, via TimeEdit — *Subscribe* / *Abonner* on the schedule page |
+| `LEDGER_FEED_UIB` | UiB, via Canvas — *Calendar Feed* in the calendar sidebar |
+| `LEDGER_FEED_WORK` | the job, via When I Work — calendar subscription, where enabled |
 
 A subscription URL carries its own token: anyone holding it can read your entire
-schedule. They live in `.env`, which is gitignored — see `.env.example` for where each
-one comes from. Never paste a feed URL into a commit or into the artifact.
+schedule. They live in `.env`, which is gitignored — see `.env.example`. Never paste a
+feed URL into a commit or into the artifact.
 
 ### What the feeds cannot give you
 

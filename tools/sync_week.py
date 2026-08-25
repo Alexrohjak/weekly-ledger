@@ -8,9 +8,9 @@ The fetch has to happen here, and the result is published to the artifact.
 Feeds are read from .env (gitignored — a feed URL is a credential: it exposes
 the whole schedule to anyone holding it):
 
-    LEDGER_FEED_TIMETABLE=https://cloud.timeedit.net/.../schedule.ics
-    LEDGER_FEED_CANVAS=https://.../feeds/calendars/user_....ics
-    LEDGER_FEED_WORK=https://.../schedule.ics
+    LEDGER_FEED_HVL=https://cloud.timeedit.net/.../schedule.ics    (TimeEdit)
+    LEDGER_FEED_UIB=https://.../feeds/calendars/user_....ics          (Canvas)
+    LEDGER_FEED_WORK=https://.../schedule.ics                          (When I Work)
 
 Only calendar events come from feeds. Everything self-directed — gym, runs,
 climbing, guitar, study, team practices — is not in any feed and is pasted in
@@ -31,7 +31,7 @@ import sys
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
 
-FEED_VARS = ('LEDGER_FEED_TIMETABLE', 'LEDGER_FEED_CANVAS', 'LEDGER_FEED_WORK')
+FEED_VARS = ('LEDGER_FEED_HVL', 'LEDGER_FEED_UIB', 'LEDGER_FEED_WORK')
 
 # Which ledger category an event lands in, by what its summary looks like.
 # First match wins; anything unmatched becomes 'life' and is flagged in --list
