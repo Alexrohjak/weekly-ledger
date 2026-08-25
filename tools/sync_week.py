@@ -33,6 +33,14 @@ from datetime import date, datetime, timedelta, timezone
 
 FEED_VARS = ('LEDGER_FEED_HVL', 'LEDGER_FEED_UIB', 'LEDGER_FEED_WORK')
 
+# Courses no longer taken. The feeds keep sending them, so drop them here.
+DROPPED_COURSES = ('DAT156',)
+
+# A deadline has a date and no span, so it cannot be placed like a lecture.
+# It becomes a short block at the end of its due day: last in the list, a
+# sliver at the bottom of the diagram column, over nothing.
+DEADLINE_START, DEADLINE_END = '23:30', '23:59'
+
 # Which ledger category an event lands in, by what its summary looks like.
 # First match wins; anything unmatched becomes 'life' and is flagged in --list
 # so it can be classified rather than silently mis-coloured.
@@ -239,9 +247,29 @@ def block_html(ev, staged=False):
         '<button class="del" type="button" aria-label="Delete">×</button></li>')
 
 
-def week_of(events, monday):
-    """Timed events falling in the seven days from monday, grouped by date and
-    sorted by start. All-day events are excluded — the ledger is a time grid."""
+def is_dropped(ev):
+    haystack = f'{ev.get("summary", "")} {ev.get("description", "")}'.upper()
+    return any(c.upper() in haystack for c in DROPPED_COURSES)
+
+
+def as_deadline(ev):
+    """An all-day item is a due date. Give it the end of its day, so it reads
+    as "by tonight" and cannot sit on top of anything real."""
+    day = ev['dtstart']
+    h1, m1 = (int(x) for x in DEADLINE_START.split(':'))
+    h2, m2 = (int(x) for x in DEADLINE_END.split(':'))
+    out = dict(ev)
+    out['dtstart'] = datetime(day.year, day.month, day.day, h1, m1)
+    out['dtend'] = datetime(day.year, day.month, day.day, h2, m2)
+    out['summary'] = 'Frist: ' + clean_summary(ev.get('summary'))
+    out['location'] = ''
+    out['deadline'] = True
+    return out
+
+
+def week_of(events, monday, deadlines=True):
+    """Events falling in the seven days from monday, grouped by date and sorted
+    by start. All-day items become end-of-day deadline blocks unless disabled."""
     days = {monday + timedelta(days=i): [] for i in range(7)}
     skipped = []
     for ev in events:
@@ -249,9 +277,15 @@ def week_of(events, monday):
         if start is None:
             skipped.append((ev, 'no start'))
             continue
-        if not isinstance(start, datetime):
-            skipped.append((ev, 'all-day'))
+        if is_dropped(ev):
+            skipped.append((ev, 'dropped course'))
             continue
+        if not isinstance(start, datetime):
+            if not deadlines:
+                skipped.append((ev, 'all-day'))
+                continue
+            ev = as_deadline(ev)
+            start = ev['dtstart']
         if start.date() in days:
             days[start.date()].append(ev)
         elif ev.get('rrule'):
@@ -332,11 +366,13 @@ def main():
     ap.add_argument('--section', default='days', choices=('days', 'nextdays'),
                     help='which week to fill (default: days)')
     ap.add_argument('--list', action='store_true', help='print the week, write nothing')
+    ap.add_argument('--no-deadlines', action='store_true',
+                    help='leave all-day coursework due dates out entirely')
     args = ap.parse_args()
 
     events = collect(args)
     monday = monday_of(args.week)
-    days, skipped = week_of(events, monday)
+    days, skipped = week_of(events, monday, deadlines=not args.no_deadlines)
     total = sum(len(v) for v in days.values())
 
     print(f'{len(events)} events in the feeds · {total} in the week of {monday}')

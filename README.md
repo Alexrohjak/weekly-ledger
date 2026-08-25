@@ -169,6 +169,19 @@ A subscription URL carries its own token: anyone holding it can read your entire
 schedule. They live in `.env`, which is gitignored — see `.env.example`. Never paste a
 feed URL into a commit or into the artifact.
 
+### Dropped courses and deadlines
+
+`DROPPED_COURSES` in the sync lists courses no longer taken. The feeds keep
+sending them long after you stop attending — DAT156 was still pushing seven
+practice-placement items — so they are filtered out by course code, and reported
+as `dropped course` rather than vanishing silently.
+
+All-day items are coursework due dates: a date with no span, so they cannot be
+placed like a lecture. Each becomes a short block at **23:30–23:59** on its due
+day, titled `Frist: …`. That puts it last in the day and reduces it to a sliver
+at the foot of the diagram column, where it covers nothing. `--no-deadlines`
+leaves them out entirely.
+
 ### What the feeds cannot give you
 
 Only calendar events. Gym sessions, runs, climbing, guitar, study slots and team
