@@ -297,11 +297,29 @@ def week_of(events, monday, deadlines=True):
 
 # ---------- splice into the ledger ----------
 
-def splice(html, days, section='days'):
-    """Replace each day's <ul class="blks"> with the feed's blocks for that date.
+BLK_RE = re.compile(r'<li class="blk".*?</li>', re.S)
+START_RE = re.compile(r'class="t"[^>]*>([^<]*)</span>')
 
-    Only feed blocks are written. Anything hand-added to a day is dropped, so
-    run this before adding gym/runs/practices to a week, not after.
+
+def block_start(block_html_text):
+    """Minutes past midnight from a block's .t span, for ordering."""
+    m = START_RE.search(block_html_text)
+    if not m:
+        return 24 * 60
+    hhmm = re.match(r'\s*(\d{1,2})[:.](\d{2})', m.group(1) or '')
+    return int(hhmm.group(1)) * 60 + int(hhmm.group(2)) if hhmm else 24 * 60
+
+
+def splice(html, days, section='days', replace_all=False):
+    """Refresh the feed's blocks in each day, leaving everything else alone.
+
+    Only blocks carrying data-src="feed" are replaced. Gym sessions, runs,
+    climbs and anything else added by hand survive a refresh — which matters,
+    because lectures move and shifts change constantly, so this gets re-run
+    often rather than once. --replace-all restores the old clean-sweep.
+
+    The merged list is re-sorted by start time, so a day stays chronological
+    however the two sources interleave.
     """
     marker = f'id="{section}"'
     if marker not in html:
@@ -310,25 +328,29 @@ def splice(html, days, section='days'):
     end = html.index('</ol>', start)
     head, region, tail = html[:start], html[start:end], html[end:]
     staged = section == 'nextdays'
-    written = 0
+    written = kept = 0
 
     def replace_day(m):
-        nonlocal written
-        iso = m.group('date')
+        nonlocal written, kept
         try:
-            d = datetime.strptime(iso, '%Y-%m-%d').date()
+            d = datetime.strptime(m.group('date'), '%Y-%m-%d').date()
         except ValueError:
             return m.group(0)
         if d not in days:
             return m.group(0)
-        blocks = ''.join(block_html(ev, staged) for ev in days[d])
-        written += len(days[d])
-        return m.group('before') + '<ul class="blks">' + blocks + '</ul>'
+        existing = [] if replace_all else [
+            b for b in BLK_RE.findall(m.group('list')) if 'data-src="feed"' not in b]
+        fresh = [block_html(ev, staged) for ev in days[d]]
+        written += len(fresh)
+        kept += len(existing)
+        merged = sorted(existing + fresh, key=block_start)
+        return m.group('before') + '<ul class="blks">' + ''.join(merged) + '</ul>'
 
     region = re.sub(
-        r'(?P<before><li class="day" data-date="(?P<date>[^"]+)".*?)<ul class="blks">.*?</ul>',
+        r'(?P<before><li class="day" data-date="(?P<date>[^"]+)".*?)'
+        r'<ul class="blks">(?P<list>.*?)</ul>',
         replace_day, region, flags=re.S)
-    return head + region + tail, written
+    return head + region + tail, written, kept
 
 
 # ---------- cli ----------
@@ -368,6 +390,8 @@ def main():
     ap.add_argument('--list', action='store_true', help='print the week, write nothing')
     ap.add_argument('--no-deadlines', action='store_true',
                     help='leave all-day coursework due dates out entirely')
+    ap.add_argument('--replace-all', action='store_true',
+                    help='clear each day first, dropping hand-added blocks too')
     args = ap.parse_args()
 
     events = collect(args)
@@ -397,14 +421,15 @@ def main():
         return
 
     html = open(args.into, encoding='utf-8').read()
-    out, written = splice(html, days, args.section)
+    out, written, kept = splice(html, days, args.section, args.replace_all)
     if args.section == 'nextdays':
         out = re.sub(r'(<span class="stagemeta" id="stagemeta">.*?·\s*)\d+( blocks</span>)',
                      rf'\g<1>{written}\g<2>', out, flags=re.S)
     open(args.into, 'w', encoding='utf-8').write(out)
-    print(f'\nwrote {written} blocks into #{args.section} of {args.into}')
-    print('gym, runs, climbing, guitar and practices are not in any feed — '
-          'paste those from templates/blocks.html')
+    print(f'\nwrote {written} feed blocks into #{args.section} of {args.into}'
+          + (f', kept {kept} of your own' if kept else ''))
+    if args.replace_all:
+        print('--replace-all: any hand-added blocks in those days were dropped')
 
 
 if __name__ == '__main__':

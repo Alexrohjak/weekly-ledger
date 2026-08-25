@@ -149,9 +149,12 @@ An event whose summary matches no category rule lands in `life` and is flagged
 `← unclassified`, so a mis-coloured block is visible instead of silent. A quietly
 vanishing lecture is the exact failure this rebuild exists to fix.
 
-`--into` replaces each day's whole `<ul class="blks">`, so **run it before adding gym,
-runs and practices to a week, not after** — anything hand-added to those days is
-overwritten. Only `#days` is touched by default; `--section nextdays` fills the staged
+`--into` refreshes only the blocks carrying `data-src="feed"`. Gym sessions, runs,
+climbs, guitar and anything else added by hand survive a refresh, and the merged day is
+re-sorted by start time so it stays chronological however the two sources interleave.
+That matters because lectures move, extra sessions appear and the Resepsjonsvakt roster
+changes constantly — this gets re-run often, not once. `--replace-all` restores the old
+clean sweep. Only `#days` is touched by default; `--section nextdays` fills the staged
 week.
 
 ### The three feeds
