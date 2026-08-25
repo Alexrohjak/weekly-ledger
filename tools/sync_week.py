@@ -135,6 +135,10 @@ def parse_ics(text, source=''):
 
 
 def fetch(url, timeout=30):
+    # TimeEdit and Canvas hand out webcal:// links. It is http underneath, but
+    # urllib has never heard of the scheme, so paste-what-they-give-you fails.
+    if url.startswith(('webcal://', 'webcals://')):
+        url = 'https://' + url.split('://', 1)[1]
     req = urllib.request.Request(url, headers={'User-Agent': 'week-ledger/1'})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read().decode('utf-8', 'replace')
