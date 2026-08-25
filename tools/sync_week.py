@@ -37,10 +37,15 @@ FEED_VARS = ('LEDGER_FEED_HVL', 'LEDGER_FEED_UIB', 'LEDGER_FEED_WORK')
 # First match wins; anything unmatched becomes 'life' and is flagged in --list
 # so it can be classified rather than silently mis-coloured.
 CATEGORY_RULES = (
-    ('study', r'forelesning|lecture|laboratorie|lab\b|seminar|kollokvie|øving|exam|eksamen'),
+    # Teaching comes in more shapes than "forelesning": HVL also files
+    # veiledning, digital undervisning and informasjon, and all of them are
+    # somewhere you have to be.
+    ('study', r'forelesning|lecture|laboratorie|lab\b|seminar|kollokvie|øving|'
+              r'veiledning|undervisning|informasjon|orientering|oppstart|gruppetime|'
+              r'praksis|exam|eksamen'),
     ('work', r'trener|vakt|shift|resepsjon|arbeid|jobb'),
     ('fitness', r'trening|practice|match|kamp|gym|løp'),
-    ('music', r'guitar|gitar|band|øving musikk'),
+    ('music', r'guitar|gitar|band'),
 )
 
 
@@ -154,10 +159,49 @@ def categorise(summary):
     return 'life'
 
 
+SHIFT_RE = re.compile(r'^\s*Shift as\s+(?P<role>.+?)\s+at\s+.+$', re.I)
+
+
+def clean_summary(summary):
+    """Strip what each feed adds and the ledger does not need.
+
+    HVL and UiB both append the course code in brackets — "Forelesning DAT158
+    [DAT158-1 26H]", "INF122: Forelesning [INF122]" — where the code is already
+    in the title. When I Work wraps the role: "Shift as X at Y", and Y is the
+    same roster name as the location.
+    """
+    summary = (summary or '').strip()
+    shift = SHIFT_RE.match(summary)
+    if shift:
+        return shift.group('role').strip()
+    summary = re.sub(r'\s*\[[^\]]*\]', '', summary)
+    return re.sub(r'\s+', ' ', summary).strip(' ,;:') or 'Untitled'
+
+
+def clean_location(location, source=''):
+    """Drop TimeEdit's room-type suffix — "M005 <Auditorium>".
+
+    The comma means different things per feed: TimeEdit separates alternative
+    rooms ("Aud14 F118,HGSD2008"), while Canvas writes room and building
+    ("Auditorium 1, Realfagbygget"). Only the former is a list.
+    """
+    location = re.sub(r'\s*<[^>]*>', '', (location or '').strip())
+    location = re.sub(r'\s+', ' ', location).strip(' ,;')
+    if source == 'hvl' and ',' in location:
+        return ' / '.join(r.strip() for r in location.split(',') if r.strip())
+    return location
+
+
 def title_of(ev):
-    summary = (ev.get('summary') or 'Untitled').strip()
-    location = (ev.get('location') or '').strip()
-    return f'{summary} · {location}' if location else summary
+    summary = clean_summary(ev.get('summary'))
+    # A shift's location is the roster it came from, which only restates the
+    # role ("Resepsjonsvakt" at "Resepsjonsvakt - Timeplan"). Drop it.
+    if SHIFT_RE.match((ev.get('summary') or '').strip()):
+        return summary
+    location = clean_location(ev.get('location'), ev.get('source', ''))
+    if location and location.lower() != summary.lower():
+        return f'{summary} · {location}'
+    return summary
 
 
 def block_key(start, title):
@@ -170,19 +214,27 @@ def esc(s):
              .replace('"', '&quot;'))
 
 
-def block_html(ev, indent=''):
+def block_html(ev, staged=False):
+    """One .blk, matching what the app writes itself.
+
+    A staged block is frozen the way the app freezes #nextdays — inputs
+    disabled, text not editable — because rollWeek() re-enables exactly those
+    when it promotes the week.
+    """
     start, end = ev['dtstart'], ev.get('dtend') or ev['dtstart'] + timedelta(hours=1)
     title = title_of(ev)
+    edit = 'false' if staged else 'plaintext-only'
+    off = ' disabled=""' if staged else ''
     return (
-        f'{indent}<li class="blk" data-cat="{categorise(ev.get("summary"))}" data-recur="0"'
+        f'<li class="blk" data-cat="{categorise(ev.get("summary"))}" data-recur="0"'
         f' data-end="{end:%H:%M}" data-src="feed" data-key="{esc(block_key(start, title))}">'
         '<button class="grip" type="button" aria-label="Drag to move"'
         ' title="Drag to move · Alt+arrows">⠿</button>'
-        '<label class="tk"><input class="tick" type="checkbox" aria-label="Done"></label>'
+        f'<label class="tk"><input class="tick" type="checkbox" aria-label="Done"{off}></label>'
         '<button class="cat" type="button" aria-label="Change category"></button>'
-        f'<span class="t" contenteditable="plaintext-only" aria-label="Time">{start:%H:%M}</span>'
+        f'<span class="t" contenteditable="{edit}" aria-label="Time">{start:%H:%M}</span>'
         f'<span class="tend" contenteditable="plaintext-only" aria-label="End time">{end:%H:%M}</span>'
-        f'<span class="ttl" contenteditable="plaintext-only" aria-label="Activity">{esc(title)}</span>'
+        f'<span class="ttl" contenteditable="{edit}" aria-label="Activity">{esc(title)}</span>'
         '<button class="rec" type="button" aria-label="Toggle recurring">↻</button>'
         '<button class="del" type="button" aria-label="Delete">×</button></li>')
 
@@ -223,6 +275,7 @@ def splice(html, days, section='days'):
     start = html.index(marker)
     end = html.index('</ol>', start)
     head, region, tail = html[:start], html[start:end], html[end:]
+    staged = section == 'nextdays'
     written = 0
 
     def replace_day(m):
@@ -234,7 +287,7 @@ def splice(html, days, section='days'):
             return m.group(0)
         if d not in days:
             return m.group(0)
-        blocks = ''.join(block_html(ev) for ev in days[d])
+        blocks = ''.join(block_html(ev, staged) for ev in days[d])
         written += len(days[d])
         return m.group('before') + '<ul class="blks">' + blocks + '</ul>'
 
@@ -309,6 +362,9 @@ def main():
 
     html = open(args.into, encoding='utf-8').read()
     out, written = splice(html, days, args.section)
+    if args.section == 'nextdays':
+        out = re.sub(r'(<span class="stagemeta" id="stagemeta">.*?·\s*)\d+( blocks</span>)',
+                     rf'\g<1>{written}\g<2>', out, flags=re.S)
     open(args.into, 'w', encoding='utf-8').write(out)
     print(f'\nwrote {written} blocks into #{args.section} of {args.into}')
     print('gym, runs, climbing, guitar and practices are not in any feed — '
