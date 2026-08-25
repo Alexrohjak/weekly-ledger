@@ -4,18 +4,47 @@ A single-file weekly planner/ledger web app, originally authored and published a
 Claude Artifact. It is one self-contained HTML file — inline CSS and JS, no build step,
 no dependencies. The only external request is Google Fonts.
 
+## The one artifact
+
+There is exactly **one** live artifact — rebuilt clean on 2026-08-25 and starting from an
+empty week:
+
+    https://claude.ai/code/artifact/0fe32cdb-1b1d-4be4-bd3a-fba8afae8316
+
+**Never publish this app without that URL.** A publish with no `url` creates a *new*
+artifact rather than a new version of this one. That is how every duplicate here appeared
+— and, once, how a rebuild got unblocked on purpose:
+
+| Artifact | Fate |
+|---|---|
+| `0fe32cdb-…` | **canonical.** The empty rebuild. Keep. |
+| `ed576c5d-…` | the old full week. Superseded — its data is in `live-snapshot.html`. Delete. |
+| `ba80fea8-…` | an earlier clean-slate restart that never got past the lectures. Delete. |
+| `e4bd535b-…` | earliest duplicate, already deleted from the gallery. |
+
+### Why the rebuild, and not a strip in place
+
+The plan was to strip `ed576c5d` back to empty days and keep the URL. The publish path
+would not allow it: overwriting a live artifact requires having read its current version
+in full, and every refused attempt cleared that state, so re-reading and re-publishing
+just alternated between *"you hadn't viewed the live version"* and *"identical content,
+already refused"*. Publishing the same stripped document as a **new** artifact has no
+prior version to reconcile against, so it goes straight through.
+
+The cost is a new URL and the loss of the five ticks from 24–30 August, which survive in
+`live-snapshot.html` and `data/*.csv`. Nothing else changed: the app code in the rebuild
+is byte-identical to what was live.
+
 ## Files
 
-| File | Source artifact | Published |
-|---|---|---|
-| `index.html` | https://claude.ai/code/artifact/ed576c5d-9a4e-4cf5-9375-78b1507c54f3 | 2026-08-23 (later) |
-| `earlier-publish.html` | https://claude.ai/code/artifact/e4bd535b-e9fc-4901-b90d-0ea81721a0a7 | 2026-08-23 (~53 min earlier) |
+| File | What it is |
+|---|---|
+| `index.html` | the code, and the empty week as published. |
+| `templates/blocks.html` | one of each block type, logs and prescriptions intact, ticks cleared. Paste into a day's `<ul class="blks">` and set the times. |
+| `live-snapshot.html` | the last capture of the old artifact — 26 blocks, 5 ticked, week of 24–30 August. |
+| `earlier-publish.html` | reference copy of the deleted `e4bd535b` publish. |
 
-These are two **separate** artifacts of the same app, not two versions of one artifact.
-`index.html` is the current one; `earlier-publish.html` is kept only as a reference copy
-of the earlier publish.
-
-Both files have had the Claude Artifact frame runtime (the injected `<base>` tag and
+All have had the Claude Artifact frame runtime (the injected `<base>` tag and
 `<!-- frame-runtime -->` bootstrap script, ~11.5 KB) stripped, so they are plain
 standalone HTML. Beyond that, `index.html` carries the boot-order fix described below;
 `earlier-publish.html` is untouched.
@@ -61,9 +90,18 @@ flow back to the published artifact.
 
 ## Republishing
 
-To push local changes back to the live artifact, publish `index.html` to the existing
-URL (`ed576c5d-…`) rather than as a new artifact — publishing without the URL creates a
-separate artifact, which is how the duplicate above came about.
+Three rules, in order:
+
+1. **Always pass the canonical URL** (`0fe32cdb-…`). A bare publish forks a new artifact.
+2. **Re-read the live artifact first and port code changes onto it.** The live page is
+   the record of what is ticked; publishing `index.html` as-is reverts every tick made
+   since it was last hand-edited.
+3. **Expect the page to have moved.** It saves itself as you use it, so the version you
+   read can be stale by the time you publish. If a publish is rejected as a conflict,
+   merge onto the newer content and publish again — never force.
+
+A cloud routine snapshots the live artifact into `live-snapshot.html` roughly twice a
+day, which is why commits authored by Claude appear in this history.
 
 ## Note on history
 
