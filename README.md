@@ -127,6 +127,47 @@ re-serializes the DOM, so formatting and attribute order churn even where nothin
 changed.
 
 
+## Calendar sync
+
+The lectures and shifts in this ledger were always placed by hand — `data-src="feed"`
+is a label, not a pipeline, and its only effect is that `rollWeek()` does not carry a
+feed block into next week. The app makes exactly one outbound call, `claude.use('artifact')`,
+and could not do more if it wanted to: an artifact runs under a CSP that blocks every
+external host except Google Fonts, so no ICS feed is reachable from the page.
+
+`tools/sync_week.py` does the fetch here instead, and writes the blocks into the ledger:
+
+    python3 tools/sync_week.py --list                     # what the feeds hold this week
+    python3 tools/sync_week.py --week 2026-08-24 --list
+    python3 tools/sync_week.py --week 2026-08-24 --into index.html
+    python3 tools/sync_week.py --from-file some.ics --list --week 2026-08-24
+
+It handles RFC 5545 line folding, escaped text, `TZID` and `Z` stamps, and it **reports
+what it does not place** rather than dropping it: all-day events (the ledger is a time
+grid, and a Canvas due-date has no span) and `RRULE` repeats, which it does not expand.
+An event whose summary matches no category rule lands in `life` and is flagged
+`← unclassified`, so a mis-coloured block is visible instead of silent. A quietly
+vanishing lecture is the exact failure this rebuild exists to fix.
+
+`--into` replaces each day's whole `<ul class="blks">`, so **run it before adding gym,
+runs and practices to a week, not after** — anything hand-added to those days is
+overwritten. Only `#days` is touched by default; `--section nextdays` fills the staged
+week.
+
+### Feeds are credentials
+
+A subscription URL carries its own token: anyone holding it can read your entire
+schedule. They live in `.env`, which is gitignored — see `.env.example` for where each
+one comes from. Never paste a feed URL into a commit or into the artifact.
+
+### What the feeds cannot give you
+
+Only calendar events. Gym sessions, runs, climbing, guitar, study slots and team
+practices exist in no feed — those come from `templates/blocks.html`, pasted into the
+day and given times. The staged-week note in the page still claims it is *"kept up to
+date from TimeEdit, Canvas and When I Work"*; that will be true for lectures and shifts
+once the feeds are configured, and never for the rest.
+
 ## Training data
 
 `tools/extract_sessions.py` turns the ledger's markup into a tidy dataset. The ledger
