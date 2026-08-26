@@ -49,7 +49,7 @@ CATEGORY_RULES = (
     # veiledning, digital undervisning and informasjon, and all of them are
     # somewhere you have to be.
     ('study', r'forelesning|lecture|laboratorie|lab\b|seminar|kollokvie|øving|'
-              r'veiledning|undervisning|informasjon|orientering|oppstart|gruppetime|'
+              r'veiledning|undervisning|informasjon|orientering|oppstart|gruppetime|frist|'
               r'praksis|exam|eksamen'),
     ('work', r'trener|vakt|shift|resepsjon|arbeid|jobb'),
     ('fitness', r'trening|practice|match|kamp|gym|løp'),
@@ -424,7 +424,7 @@ def main():
     out, written, kept = splice(html, days, args.section, args.replace_all)
     if args.section == 'nextdays':
         out = re.sub(r'(<span class="stagemeta" id="stagemeta">.*?·\s*)\d+( blocks</span>)',
-                     rf'\g<1>{written}\g<2>', out, flags=re.S)
+                     rf'\g<1>{written + kept}\g<2>', out, flags=re.S)
     open(args.into, 'w', encoding='utf-8').write(out)
     print(f'\nwrote {written} feed blocks into #{args.section} of {args.into}'
           + (f', kept {kept} of your own' if kept else ''))
