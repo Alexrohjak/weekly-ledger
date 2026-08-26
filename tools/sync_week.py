@@ -315,7 +315,9 @@ def restamp(html):
     return re.sub(r'data-build="[^"]*"', f'data-build="sync-{digest}"', html)
 
 
-BLK_RE = re.compile(r'<li class="blk".*?</li>', re.S)
+# Tolerant of attributes before class= — a gym block carries title="..." first,
+# and a stricter pattern silently failed to see it, so a refresh deleted it.
+BLK_RE = re.compile(r'<li[^>]*\sclass="blk".*?</li>', re.S)
 START_RE = re.compile(r'class="t"[^>]*>([^<]*)</span>')
 
 
