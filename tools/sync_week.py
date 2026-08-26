@@ -25,6 +25,7 @@ Stdlib only — no icalendar/requests on this machine.
 """
 
 import argparse
+import hashlib
 import os
 import re
 import sys
@@ -297,6 +298,23 @@ def week_of(events, monday, deadlines=True):
 
 # ---------- splice into the ledger ----------
 
+def restamp(html):
+    """Give the page a data-build derived from its own content.
+
+    A device keeps its remembered copy only while the published build matches
+    what it stored; if the build is unchanged, the device's copy wins at boot
+    and silently replaces whatever was published. Leaving the build alone after
+    rewriting the week is therefore the same bug the app already carries a
+    comment about — a republish that appears to do nothing.
+
+    Hashing the content means the build changes exactly when the page does, and
+    an identical rewrite correctly leaves devices alone.
+    """
+    body = re.sub(r'\sdata-build="[^"]*"', '', html)
+    digest = hashlib.sha256(body.encode('utf-8')).hexdigest()[:12]
+    return re.sub(r'data-build="[^"]*"', f'data-build="sync-{digest}"', html)
+
+
 BLK_RE = re.compile(r'<li class="blk".*?</li>', re.S)
 START_RE = re.compile(r'class="t"[^>]*>([^<]*)</span>')
 
@@ -425,6 +443,7 @@ def main():
     if args.section == 'nextdays':
         out = re.sub(r'(<span class="stagemeta" id="stagemeta">.*?·\s*)\d+( blocks</span>)',
                      rf'\g<1>{written + kept}\g<2>', out, flags=re.S)
+    out = restamp(out)
     open(args.into, 'w', encoding='utf-8').write(out)
     print(f'\nwrote {written} feed blocks into #{args.section} of {args.into}'
           + (f', kept {kept} of your own' if kept else ''))
