@@ -223,23 +223,26 @@ def esc(s):
              .replace('"', '&quot;'))
 
 
-def block_html(ev, staged=False):
+def block_html(ev, staged=False, ticked=False):
     """One .blk, matching what the app writes itself.
 
     A staged block is frozen the way the app freezes #nextdays — inputs
     disabled, text not editable — because rollWeek() re-enables exactly those
-    when it promotes the week.
+    when it promotes the week. `ticked` carries a tick across a refresh: the
+    block is rewritten from the feed, so without it every lecture and shift you
+    had marked done would silently come back undone.
     """
     start, end = ev['dtstart'], ev.get('dtend') or ev['dtstart'] + timedelta(hours=1)
     title = title_of(ev)
     edit = 'false' if staged else 'plaintext-only'
     off = ' disabled=""' if staged else ''
+    tick = ' checked=""' if ticked else ''
     return (
         f'<li class="blk" data-cat="{categorise(ev.get("summary"))}" data-recur="0"'
         f' data-end="{end:%H:%M}" data-src="feed" data-key="{esc(block_key(start, title))}">'
         '<button class="grip" type="button" aria-label="Drag to move"'
         ' title="Drag to move · Alt+arrows">⠿</button>'
-        f'<label class="tk"><input class="tick" type="checkbox" aria-label="Done"{off}></label>'
+        f'<label class="tk"><input class="tick" type="checkbox" aria-label="Done"{tick}{off}></label>'
         '<button class="cat" type="button" aria-label="Change category"></button>'
         f'<span class="t" contenteditable="{edit}" aria-label="Time">{start:%H:%M}</span>'
         f'<span class="tend" contenteditable="plaintext-only" aria-label="End time">{end:%H:%M}</span>'
@@ -358,9 +361,18 @@ def splice(html, days, section='days', replace_all=False):
             return m.group(0)
         if d not in days:
             return m.group(0)
-        existing = [] if replace_all else [
-            b for b in BLK_RE.findall(m.group('list')) if 'data-src="feed"' not in b]
-        fresh = [block_html(ev, staged) for ev in days[d]]
+        blocks = BLK_RE.findall(m.group('list'))
+        existing = [] if replace_all else [b for b in blocks if 'data-src="feed"' not in b]
+        # Which feed blocks were ticked, by the key they were written with — the
+        # replacement is a different element, so the tick has to be carried over.
+        was_ticked = {
+            re.search(r'data-key="([^"]*)"', b).group(1)
+            for b in blocks
+            if 'data-src="feed"' in b and 'data-key="' in b
+            and re.search(r'class="tick"[^>]*\schecked', b)}
+        fresh = [block_html(ev, staged,
+                            ticked=block_key(ev['dtstart'], title_of(ev)) in was_ticked)
+                 for ev in days[d]]
         written += len(fresh)
         kept += len(existing)
         merged = sorted(existing + fresh, key=block_start)

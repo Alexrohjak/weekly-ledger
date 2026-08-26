@@ -157,6 +157,35 @@ changes constantly — this gets re-run often, not once. `--replace-all` restore
 clean sweep. Only `#days` is touched by default; `--section nextdays` fills the staged
 week.
 
+### Keeping ticks
+
+Ticks live in the artifact, not here. The app writes them into its own markup and
+republishes itself a few seconds after each change, so the live page is the record of
+what is done. Two things can destroy that record, and both are handled:
+
+**A refresh rewrites feed blocks.** A lecture or shift you had ticked would come back
+unticked, because the block is regenerated rather than edited. The sync now carries the
+tick across by `data-key`, so it survives — verified across repeated refreshes. If an
+event moves, its key changes and the tick is not carried, which is correct: it is a
+different event now.
+
+**Publishing this repo's `index.html` reverts every tick made since it was last
+written.** `index.html` is the code and the week's structure; it is never the tick
+record. So the rule for republishing is:
+
+1. Read the live artifact.
+2. Run the sync against **that** file, not against `index.html`.
+3. Publish the result, and copy it back over `index.html`.
+
+Never publish `index.html` directly at a live artifact that has been used since the last
+sync. This is the same failure that cost the 23 Aug and 26 Aug states, in a different
+disguise.
+
+One prerequisite outside this repo: the page must be open in a view where the artifact
+capability is granted. In a preview view (`?via=auto_preview`) `claude.use('artifact')`
+returns null, the chip reads *Offline — changes stay on this device*, and every tick is
+written to `localStorage` and nowhere else. Check the chip says **Saved**.
+
 ### The three feeds
 
 Lectures come from two institutions, so the slots are named for the source rather than
